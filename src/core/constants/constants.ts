@@ -18,6 +18,7 @@ export const ROUTES = {
   },
   FETCHLAB: '/dashboard/fetchlab',
   VAULTDROP: '/dashboard/vaultdrop',
+  DEVTOOLS: '/dashboard/devtools',
 } as const
 
 export const HTTP_STATUS = {

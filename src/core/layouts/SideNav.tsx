@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Zap, ChevronLeft, ChevronRight, Settings,
-  HelpCircle, BarChart3, Users, Package, Shield, Bell, CloudUpload
+  HelpCircle, BarChart3, Users, Package, Shield, Bell, CloudUpload, Wrench
 } from 'lucide-react'
 import { cn } from '@utils/index'
 import { ROUTES } from '@core/constants/constants'
@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', to: ROUTES.DASHBOARD, icon: <LayoutDashboard size={18} /> },
   { label: 'FetchLab', to: ROUTES.FETCHLAB, icon: <Zap size={18} />, badge: 'Pro' },
   { label: 'VaultDrop', to: ROUTES.VAULTDROP, icon: <CloudUpload size={18} />, badge: 'New' },
+  { label: 'DevTools', to: ROUTES.DEVTOOLS, icon: <Wrench size={18} />, badge: 'New' },
   { label: 'Analytics', to: '/dashboard/analytics', icon: <BarChart3 size={18} /> },
   { label: 'Users', to: '/dashboard/users', icon: <Users size={18} /> },
   { label: 'Packages', to: '/dashboard/packages', icon: <Package size={18} /> },
@@ -99,9 +100,9 @@ export const SideNav = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       {/* Logo */}
       <div className={cn('flex items-center gap-2.5 px-3 py-4 flex-shrink-0', collapsed && 'justify-center px-0')}>
         {collapsed && (
-          <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-glow-sm">
+        <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-glow-sm">
             <img src={AppLogo} alt="App Logo" className="h-full w-full object-contain" />
-          </div>
+        </div>
         )}
         <AnimatePresence>
           {!collapsed && (

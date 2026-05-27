@@ -28,6 +28,9 @@ const FetchLabPage = lazy(() =>
 const VaultDropPage = lazy(() =>
   import('@modules/vaultdrop/pages/VaultDropPage').then((m) => ({ default: m.VaultDropPage })),
 )
+const DevToolsPage = lazy(() =>
+  import('@modules/devtools/pages/DevToolsPage').then((m) => ({ default: m.DevToolsPage })),
+)
 
 const withSuspense = (component: React.ReactNode) => (
   <Suspense fallback={<FullPageLoader />}>
@@ -71,6 +74,10 @@ export const router = createBrowserRouter([
           {
             path: '/dashboard/vaultdrop',
             element: withSuspense(<VaultDropPage />),
+          },
+          {
+            path: '/dashboard/devtools',
+            element: withSuspense(<DevToolsPage />),
           },
           {
             path: '/dashboard/analytics',
