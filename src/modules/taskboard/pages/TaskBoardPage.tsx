@@ -1,16 +1,21 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, LayoutGrid, List, SlidersHorizontal } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
-import { setFilterPriority, setFilterLabel, setSearchQuery, setView, addTaskAsync } from '../store/taskboardSlice'
+import { setFilterPriority, setFilterLabel, setSearchQuery, setView, addTaskAsync, fetchTasksFromSupabase } from '../store/taskboardSlice'
 import { type Priority, PRIORITY_CONFIG, LABEL_COLORS } from '../dto/types/taskboard.types'
 import { KanbanBoard } from '../components/KanbanBoard'
 import { TaskModal } from '../components/TaskModal'
 import { cn } from '@utils/index'
+import { useEffect } from 'react'
 
 export function TaskBoardPage() {
   const dispatch = useAppDispatch()
   const { board, activeTaskId, filterPriority, filterLabel, searchQuery, view } = useAppSelector(s => s.taskboard)
   const { user } = useAppSelector(s => s.auth)
+
+  useEffect(() => {
+    dispatch(fetchTasksFromSupabase())
+  }, [dispatch])
 
   const totalTasks = board.tasks.length
   const completedTasks = board.tasks.filter(t => t.isCompleted || t.columnId === 'done').length

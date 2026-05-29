@@ -2,9 +2,10 @@ import { useState, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PanelLeftClose, PanelLeft, NotebookPen, FileText } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
-import { createNote } from '../store/notesSlice'
+import { createNote, fetchNotesFromSupabase } from '../store/notesSlice'
 import { NotesSidebar } from '../components/NotesSidebar'
 import { cn } from '@utils/index'
+import { useEffect } from 'react'
 
 const NoteEditor = lazy(() => import('../components/NoteEditor').then(m => ({ default: m.NoteEditor })))
 
@@ -27,6 +28,10 @@ export function NotesPage() {
   const dispatch = useAppDispatch()
   const { activeNoteId, notes } = useAppSelector(s => s.notes)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    dispatch(fetchNotesFromSupabase())
+  }, [dispatch])
 
   const activeNote = notes.find(n => n.id === activeNoteId)
 

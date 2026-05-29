@@ -4,9 +4,6 @@ import { router } from '@routes/routes'
 import { useAppDispatch } from '@core/hooks/useStore'
 import { restoreSession, clearSession } from '@modules/auth/store/authSlice'
 import { supabase } from '@core/config/supabaseClient'
-import { loadFetchLabFromSupabase } from '@modules/fetchlab/store/fetchlabSlice'
-import { fetchTasksFromSupabase } from '@modules/taskboard/store/taskboardSlice'
-import { fetchNotesFromSupabase } from '@modules/notes/store/notesSlice'
 
 function AppInner() {
   const dispatch = useAppDispatch()
@@ -19,11 +16,6 @@ function AppInner() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         dispatch(clearSession())
-      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-        // Load all user data from Supabase after login / session restore
-        dispatch(loadFetchLabFromSupabase())
-        dispatch(fetchTasksFromSupabase())
-        dispatch(fetchNotesFromSupabase())
       }
     })
 

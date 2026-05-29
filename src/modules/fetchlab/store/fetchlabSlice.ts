@@ -30,17 +30,36 @@ const loadEnv = (): EnvVar[] => {
 const loadHistory = (): HistoryEntry[] => {
   try { return JSON.parse(localStorage.getItem(LS_HIST) || '[]') } catch { return [] }
 }
-const saveItems = (items: FetchItem[]) => localStorage.setItem(LS_ITEMS, JSON.stringify(items))
 const saveEnv = (vars: EnvVar[]) => localStorage.setItem(LS_ENV, JSON.stringify(vars))
 const saveHistory = (hist: HistoryEntry[]) => localStorage.setItem(LS_HIST, JSON.stringify(hist))
+
+const cloneJson = <T>(value: T): T => JSON.parse(JSON.stringify(value))
+
+const stripRuntimeFiles = (items: FetchItem[]): FetchItem[] => {
+  const normalize = (item: FetchItem): FetchItem => {
+    if (item.type === 'folder') {
+      return { ...item, children: item.children.map(normalize) }
+    }
+    return {
+      ...item,
+      formFiles: item.formFiles.map((row) => ({ ...row, files: [] })),
+    }
+  }
+  return cloneJson(items).map(normalize)
+}
+
+const saveItems = (items: FetchItem[]) =>
+  localStorage.setItem(LS_ITEMS, JSON.stringify(stripRuntimeFiles(items)))
 
 // Debounced Supabase workspace sync (1.5 s after last mutation)
 let syncTimer: ReturnType<typeof setTimeout> | null = null
 const scheduleSyncWorkspace = (items: FetchItem[], envVars: EnvVar[]) => {
+  const itemsSnapshot = stripRuntimeFiles(items)
+  const envSnapshot = cloneJson(envVars)
   if (syncTimer) clearTimeout(syncTimer)
   syncTimer = setTimeout(async () => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (user) await fetchlabService.saveWorkspace(user.id, items, envVars)
+    if (user) await fetchlabService.saveWorkspace(user.id, itemsSnapshot, envSnapshot)
   }, 1500)
 }
 
@@ -118,7 +137,27 @@ const getAllFolders = (arr: FetchItem[]): FetchFolder[] => {
   return result
 }
 
-const deepClone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
+const deepClone = cloneJson
+
+const replaceRequestInTree = (items: FetchItem[], request: FetchRequest): boolean => {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    if (item.type === 'request' && item.id === request.id) {
+      items[i] = deepClone(request)
+      return true
+    }
+    if (item.type === 'folder' && replaceRequestInTree(item.children, request)) return true
+  }
+  return false
+}
+
+const persistWorkspace = (state: FetchLabState) => {
+  if (state.currentRequest) {
+    replaceRequestInTree(state.items, state.currentRequest)
+  }
+  saveItems(state.items)
+  scheduleSyncWorkspace(state.items, state.envVars)
+}
 
 const replaceEnvVars = (str: string, vars: EnvVar[]): string => {
   let result = str
@@ -249,15 +288,13 @@ const fetchlabSlice = createSlice({
       state.currentId = req.id
       state.currentRequest = req
       state.response = null
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     createFolder(state, action: PayloadAction<string>) {
       const folder: FetchFolder = { id: generateId(), type: 'folder', name: action.payload, open: true, children: [] }
       state.items.push(folder)
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     duplicateRequest(state, action: PayloadAction<string>) {
@@ -268,8 +305,7 @@ const fetchlabSlice = createSlice({
       const arr = parentArr || state.items
       const idx = arr.findIndex((i) => i.id === action.payload)
       arr.splice(idx + 1, 0, copy)
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     moveToFolder(state, action: PayloadAction<{ id: string; targetFolderId: string | null }>) {
@@ -286,8 +322,7 @@ const fetchlabSlice = createSlice({
       } else {
         state.items.push(clone)
       }
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     reorderItems(state, action: PayloadAction<{ dragId: string; targetId: string; pos: 'before' | 'after' | 'into' }>) {
@@ -306,8 +341,7 @@ const fetchlabSlice = createSlice({
         if (idx !== -1) arr.splice(pos === 'before' ? idx : idx + 1, 0, clone)
         else state.items.push(clone)
       }
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     selectRequest(state, action: PayloadAction<string>) {
@@ -329,7 +363,10 @@ const fetchlabSlice = createSlice({
     },
 
     updateCurrentRequest(state, action: PayloadAction<Partial<FetchRequest>>) {
-      if (state.currentRequest) state.currentRequest = { ...state.currentRequest, ...action.payload }
+      if (state.currentRequest) {
+        state.currentRequest = { ...state.currentRequest, ...action.payload }
+        persistWorkspace(state)
+      }
     },
 
     saveCurrentRequest(state) {
@@ -344,8 +381,7 @@ const fetchlabSlice = createSlice({
         return false
       }
       update(state.items)
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     deleteItem(state, action: PayloadAction<string>) {
@@ -355,8 +391,7 @@ const fetchlabSlice = createSlice({
         )
       state.items = remove(state.items)
       if (state.currentId === action.payload) { state.currentId = null; state.currentRequest = null; state.response = null }
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     renameItem(state, action: PayloadAction<{ id: string; name: string }>) {
@@ -371,8 +406,7 @@ const fetchlabSlice = createSlice({
         }
       }
       rename(state.items)
-      saveItems(state.items)
-      scheduleSyncWorkspace(state.items, state.envVars)
+      persistWorkspace(state)
     },
 
     toggleFolder(state, action: PayloadAction<string>) {
@@ -383,7 +417,7 @@ const fetchlabSlice = createSlice({
         }
       }
       toggle(state.items)
-      saveItems(state.items)
+      persistWorkspace(state)
     },
 
     // ── Env vars ─────────────────────────────────────────
@@ -408,54 +442,78 @@ const fetchlabSlice = createSlice({
 
     // ── KV rows ──────────────────────────────────────────
     addKVRow(state, action: PayloadAction<{ target: 'params' | 'headers' | 'formEncodeFields' }>) {
-      if (state.currentRequest) state.currentRequest[action.payload.target].push(blankKV())
+      if (state.currentRequest) {
+        state.currentRequest[action.payload.target].push(blankKV())
+        persistWorkspace(state)
+      }
     },
     updateKVRow(state, action: PayloadAction<{ target: 'params' | 'headers' | 'formEncodeFields'; id: string; field: 'key' | 'value' | 'enabled'; value: string | boolean }>) {
       if (state.currentRequest) {
         const row = state.currentRequest[action.payload.target].find((r) => r.id === action.payload.id)
         if (row) (row[action.payload.field] as string | boolean) = action.payload.value
+        persistWorkspace(state)
       }
     },
     deleteKVRow(state, action: PayloadAction<{ target: 'params' | 'headers' | 'formEncodeFields'; id: string }>) {
-      if (state.currentRequest)
+      if (state.currentRequest) {
         state.currentRequest[action.payload.target] = state.currentRequest[action.payload.target].filter((r) => r.id !== action.payload.id)
+        persistWorkspace(state)
+      }
     },
 
     // ── Form fields (multipart) ───────────────────────────
     addFormField(state) {
-      if (state.currentRequest) state.currentRequest.formFields.push({ id: generateId(), enabled: true, key: '', value: '' })
+      if (state.currentRequest) {
+        state.currentRequest.formFields.push({ id: generateId(), enabled: true, key: '', value: '' })
+        persistWorkspace(state)
+      }
     },
     updateFormField(state, action: PayloadAction<{ id: string; field: 'key' | 'value' | 'enabled'; value: string | boolean }>) {
       if (state.currentRequest) {
         const row = state.currentRequest.formFields.find((r) => r.id === action.payload.id)
         if (row) (row[action.payload.field] as string | boolean) = action.payload.value
+        persistWorkspace(state)
       }
     },
     deleteFormField(state, action: PayloadAction<string>) {
-      if (state.currentRequest) state.currentRequest.formFields = state.currentRequest.formFields.filter((r) => r.id !== action.payload)
+      if (state.currentRequest) {
+        state.currentRequest.formFields = state.currentRequest.formFields.filter((r) => r.id !== action.payload)
+        persistWorkspace(state)
+      }
     },
     setFormFields(state, action: PayloadAction<FormField[]>) {
-      if (state.currentRequest) state.currentRequest.formFields = action.payload
+      if (state.currentRequest) {
+        state.currentRequest.formFields = action.payload
+        persistWorkspace(state)
+      }
     },
 
     // ── Form files (multipart) ────────────────────────────
     addFormFile(state) {
-      if (state.currentRequest) state.currentRequest.formFiles.push({ id: generateId(), enabled: true, key: '', files: [] })
+      if (state.currentRequest) {
+        state.currentRequest.formFiles.push({ id: generateId(), enabled: true, key: '', files: [] })
+        persistWorkspace(state)
+      }
     },
     updateFormFileKey(state, action: PayloadAction<{ id: string; key: string }>) {
       if (state.currentRequest) {
         const row = state.currentRequest.formFiles.find((r) => r.id === action.payload.id)
         if (row) row.key = action.payload.key
+        persistWorkspace(state)
       }
     },
     updateFormFileEnabled(state, action: PayloadAction<{ id: string; enabled: boolean }>) {
       if (state.currentRequest) {
         const row = state.currentRequest.formFiles.find((r) => r.id === action.payload.id)
         if (row) row.enabled = action.payload.enabled
+        persistWorkspace(state)
       }
     },
     deleteFormFile(state, action: PayloadAction<string>) {
-      if (state.currentRequest) state.currentRequest.formFiles = state.currentRequest.formFiles.filter((r) => r.id !== action.payload)
+      if (state.currentRequest) {
+        state.currentRequest.formFiles = state.currentRequest.formFiles.filter((r) => r.id !== action.payload)
+        persistWorkspace(state)
+      }
     },
 
     // ── Tabs ─────────────────────────────────────────────
@@ -463,6 +521,7 @@ const fetchlabSlice = createSlice({
     setActiveBodyTab(state, action: PayloadAction<BodyType>) {
       state.activeBodyTab = action.payload
       if (state.currentRequest) state.currentRequest.bodyType = action.payload
+      persistWorkspace(state)
     },
     setSidebarTab(state, action: PayloadAction<'collections' | 'history'>) { state.sidebarTab = action.payload },
 
@@ -482,6 +541,7 @@ const fetchlabSlice = createSlice({
       if (action.payload.envVars) state.envVars = action.payload.envVars
       saveItems(state.items)
       if (action.payload.envVars) saveEnv(state.envVars)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
   },
 

@@ -12,7 +12,7 @@ import {
   duplicateRequest, moveToFolder, reorderItems, importData,
   getAllFolders, findItem,
 } from '../store/fetchlabSlice'
-import type { FetchItem, FetchFolder } from '../dto/types/fetchlab.types'
+import type { FetchItem } from '../dto/types/fetchlab.types'
 import { Modal, Button, Input, Select } from '@components/index'
 import toast from 'react-hot-toast'
 
@@ -206,7 +206,7 @@ function TreeNode({ item, depth = 0, onCtxMenu, dragState, onDrop }: TreeNodePro
 // ─────────────────────────────────────────────────────────────
 export const FetchLabSidebar = () => {
   const dispatch = useAppDispatch()
-  const { items, history, sidebarTab } = useAppSelector((s) => s.fetchlab)
+  const { items, history, sidebarTab, envVars } = useAppSelector((s) => s.fetchlab)
 
   // drag state kept in a ref to avoid re-renders
   const dragState = useRef<{ id: string | null; overId: string | null; pos: DragPos | null }>({ id: null, overId: null, pos: null })
@@ -220,6 +220,7 @@ export const FetchLabSidebar = () => {
   const [folderName, setFolderName] = useState('My Collection')
   const [newName, setNewName] = useState('')
   const [activeCtx, setActiveCtx] = useState<CtxMenuState | null>(null)
+  const [modalTargetId, setModalTargetId] = useState<string | null>(null)
   const [moveFolderId, setMoveFolderId] = useState('')
   const [searchVal, setSearchVal] = useState('')
 
@@ -242,7 +243,7 @@ export const FetchLabSidebar = () => {
 
   // ── export ──
   const handleExport = () => {
-    const payload = { version: 2, items, envVars: [] }
+    const payload = { version: 2, items, envVars }
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
@@ -425,6 +426,7 @@ export const FetchLabSidebar = () => {
                   <CtxItem icon={<Pencil size={13} />} label="Rename Folder" onClick={() => {
                     const item = findItem(activeCtx.itemId, items)
                     setNewName(item?.name || '')
+                    setModalTargetId(activeCtx.itemId)
                     setRenameOpen(true); closeCtx()
                   }} />
                   <CtxItem icon={<Plus size={13} />} label="Add Request" onClick={() => {
@@ -440,6 +442,7 @@ export const FetchLabSidebar = () => {
                   <CtxItem icon={<Pencil size={13} />} label="Rename" onClick={() => {
                     const item = findItem(activeCtx.itemId, items)
                     setNewName(item?.name || '')
+                    setModalTargetId(activeCtx.itemId)
                     setRenameOpen(true); closeCtx()
                   }} />
                   <CtxItem icon={<Copy size={13} />} label="Duplicate" onClick={() => {
@@ -449,6 +452,7 @@ export const FetchLabSidebar = () => {
                   <div className="h-px bg-surface-700 my-1" />
                   <CtxItem icon={<FolderInput size={13} />} label="Move to Folder…" onClick={() => {
                     setMoveFolderId('')
+                    setModalTargetId(activeCtx.itemId)
                     setMoveOpen(true); closeCtx()
                   }} />
                   <div className="h-px bg-surface-700 my-1" />
@@ -467,12 +471,12 @@ export const FetchLabSidebar = () => {
         footer={<>
           <Button variant="ghost" size="sm" onClick={() => setRenameOpen(false)}>Cancel</Button>
           <Button size="sm" onClick={() => {
-            if (activeCtx) dispatch(renameItem({ id: activeCtx.itemId, name: newName }))
+            if (modalTargetId) dispatch(renameItem({ id: modalTargetId, name: newName }))
             setRenameOpen(false)
           }}>Rename</Button>
         </>}>
         <Input value={newName} onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && activeCtx) { dispatch(renameItem({ id: activeCtx.itemId, name: newName })); setRenameOpen(false) }}} autoFocus />
+          onKeyDown={(e) => { if (e.key === 'Enter' && modalTargetId) { dispatch(renameItem({ id: modalTargetId, name: newName })); setRenameOpen(false) }}} autoFocus />
       </Modal>
 
       {/* ── Move to folder modal ── */}
@@ -480,7 +484,7 @@ export const FetchLabSidebar = () => {
         footer={<>
           <Button variant="ghost" size="sm" onClick={() => setMoveOpen(false)}>Cancel</Button>
           <Button size="sm" onClick={() => {
-            if (activeCtx) dispatch(moveToFolder({ id: activeCtx.itemId, targetFolderId: moveFolderId || null }))
+            if (modalTargetId) dispatch(moveToFolder({ id: modalTargetId, targetFolderId: moveFolderId || null }))
             setMoveOpen(false)
             toast.success('Moved')
           }}>Move</Button>
@@ -491,7 +495,7 @@ export const FetchLabSidebar = () => {
           onChange={(e) => setMoveFolderId(e.target.value)}
           options={[
             { value: '', label: '— Root level —' },
-            ...allFolders.filter((f) => f.id !== activeCtx?.itemId).map((f) => ({ value: f.id, label: f.name })),
+            ...allFolders.filter((f) => f.id !== modalTargetId).map((f) => ({ value: f.id, label: f.name })),
           ]}
         />
       </Modal>

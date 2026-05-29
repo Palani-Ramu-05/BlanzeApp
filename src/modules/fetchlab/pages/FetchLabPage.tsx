@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
 import {
-  setActiveMainTab, sendRequest, saveCurrentRequest, updateCurrentRequest,
+  loadFetchLabFromSupabase, setActiveMainTab, sendRequest, saveCurrentRequest, updateCurrentRequest,
 } from '../store/fetchlabSlice'
 import { FetchLabSidebar } from '../components/FetchLabSidebar'
 import { FetchLabRequestBar } from '../components/FetchLabRequestBar'
@@ -31,6 +31,10 @@ export const FetchLabPage = () => {
   usePageTitle('FetchLab')
   const dispatch = useAppDispatch()
   const { currentRequest, activeMainTab } = useAppSelector((s) => s.fetchlab)
+
+  useEffect(() => {
+    dispatch(loadFetchLabFromSupabase())
+  }, [dispatch])
 
   // ── Resizable panel height ──
   const [panelH, setPanelH] = useState(DEFAULT_PANEL_H)
