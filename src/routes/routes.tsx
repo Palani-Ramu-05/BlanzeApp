@@ -19,8 +19,8 @@ const ForgotPasswordPage = lazy(() =>
     default: m.ForgotPasswordPage,
   })),
 )
-const DashboardPage = lazy(() =>
-  import('@modules/dashboard/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
+const WeatherPage = lazy(() =>
+  import('@modules/weather/pages/WeatherPage').then((m) => ({ default: m.WeatherPage })),
 )
 const FetchLabPage = lazy(() =>
   import('@modules/fetchlab/pages/FetchLabPage').then((m) => ({ default: m.FetchLabPage })),
@@ -68,14 +68,14 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Protected dashboard routes
+  // Protected app routes
   {
     element: <ProtectedRoute />,
     children: [
       {
         element: <HomeLayout />,
         children: [
-          { path: '/', element: withSuspense(<DashboardPage />) },
+          { path: '/', element: withSuspense(<WeatherPage />) },
           { path: '/fetchlab', element: withSuspense(<FetchLabPage />) },
           { path: '/vaultdrop', element: withSuspense(<VaultDropPage />) },
           { path: '/devtools', element: withSuspense(<DevToolsPage />) },

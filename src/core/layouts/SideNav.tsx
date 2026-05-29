@@ -20,7 +20,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', to: ROUTES.DASHBOARD, icon: <LayoutDashboard size={18} />, group: 'main' },
+  { label: 'Weather', to: ROUTES.DASHBOARD, icon: <LayoutDashboard size={18} />, group: 'main' },
   { label: 'FetchLab', to: ROUTES.FETCHLAB, icon: <Zap size={18} />, badge: 'Pro', group: 'main' },
   { label: 'VaultDrop', to: ROUTES.VAULTDROP, icon: <CloudUpload size={18} />, group: 'main' },
   { label: 'DevTools', to: ROUTES.DEVTOOLS, icon: <Wrench size={18} />, group: 'main' },
