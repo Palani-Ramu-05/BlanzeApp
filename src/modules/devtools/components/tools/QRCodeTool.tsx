@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 type ErrorLevel = 'L' | 'M' | 'Q' | 'H'
 
 export const QRCodeTool = () => {
-  const [value, setValue] = useState('https://blanzeapp.onrender.com/dashboard/vaultdrop')
+  const [value, setValue] = useState('https://blanzeapp.onrender.com/vaultdrop')
   const [fgColor, setFgColor] = useState('#ffffff')
   const [bgColor, setBgColor] = useState('#cc2222')
   const [level, setLevel] = useState<ErrorLevel>('M')

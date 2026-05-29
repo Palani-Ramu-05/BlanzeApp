@@ -9,16 +9,19 @@ export const STORAGE_KEYS = {
 
 export const ROUTES = {
   HOME: '/',
-  DASHBOARD: '/dashboard',
+  DASHBOARD: '/',
   AUTH: {
     SIGNIN: '/auth/signin',
     SIGNUP: '/auth/signup',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
   },
-  FETCHLAB: '/dashboard/fetchlab',
-  VAULTDROP: '/dashboard/vaultdrop',
-  DEVTOOLS: '/dashboard/devtools',
+  FETCHLAB: '/fetchlab',
+  VAULTDROP: '/vaultdrop',
+  DEVTOOLS: '/devtools',
+  TIMER: '/timer',
+  TASKBOARD: '/task-board',
+  NOTES: '/notes',
 } as const
 
 export const HTTP_STATUS = {

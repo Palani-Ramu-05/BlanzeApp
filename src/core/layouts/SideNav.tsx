@@ -2,7 +2,8 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Zap, ChevronLeft, ChevronRight, Settings,
-  HelpCircle, BarChart3, Users, Package, Shield, Bell, CloudUpload, Wrench
+  HelpCircle, BarChart3, Users, Package, Shield, Bell, CloudUpload, Wrench,
+  Timer, KanbanSquare, NotebookPen
 } from 'lucide-react'
 import { cn } from '@utils/index'
 import { ROUTES } from '@core/constants/constants'
@@ -15,23 +16,27 @@ interface NavItem {
   to: string
   icon: React.ReactNode
   badge?: string | number
+  group?: string
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', to: ROUTES.DASHBOARD, icon: <LayoutDashboard size={18} /> },
-  { label: 'FetchLab', to: ROUTES.FETCHLAB, icon: <Zap size={18} />, badge: 'Pro' },
-  { label: 'VaultDrop', to: ROUTES.VAULTDROP, icon: <CloudUpload size={18} />, badge: 'New' },
-  { label: 'DevTools', to: ROUTES.DEVTOOLS, icon: <Wrench size={18} />, badge: 'New' },
-  { label: 'Analytics', to: '/dashboard/analytics', icon: <BarChart3 size={18} /> },
-  { label: 'Users', to: '/dashboard/users', icon: <Users size={18} /> },
-  { label: 'Packages', to: '/dashboard/packages', icon: <Package size={18} /> },
-  { label: 'Security', to: '/dashboard/security', icon: <Shield size={18} /> },
-  { label: 'Notifications', to: '/dashboard/notifications', icon: <Bell size={18} /> },
+  { label: 'Dashboard', to: ROUTES.DASHBOARD, icon: <LayoutDashboard size={18} />, group: 'main' },
+  { label: 'FetchLab', to: ROUTES.FETCHLAB, icon: <Zap size={18} />, badge: 'Pro', group: 'main' },
+  { label: 'VaultDrop', to: ROUTES.VAULTDROP, icon: <CloudUpload size={18} />, group: 'main' },
+  { label: 'DevTools', to: ROUTES.DEVTOOLS, icon: <Wrench size={18} />, group: 'main' },
+  { label: 'Timer', to: ROUTES.TIMER, icon: <Timer size={18} />, group: 'productivity' },
+  { label: 'Task Board', to: ROUTES.TASKBOARD, icon: <KanbanSquare size={18} />, group: 'productivity' },
+  { label: 'Notes', to: ROUTES.NOTES, icon: <NotebookPen size={18} />, group: 'productivity' },
+  { label: 'Analytics', to: '/analytics', icon: <BarChart3 size={18} />, group: 'system' },
+  { label: 'Users', to: '/users', icon: <Users size={18} />, group: 'system' },
+  { label: 'Packages', to: '/packages', icon: <Package size={18} />, group: 'system' },
+  { label: 'Security', to: '/security', icon: <Shield size={18} />, group: 'system' },
+  { label: 'Notifications', to: '/notifications', icon: <Bell size={18} />, group: 'system' },
 ]
 
 const bottomItems: NavItem[] = [
-  { label: 'Settings', to: '/dashboard/settings', icon: <Settings size={18} /> },
-  { label: 'Help', to: '/dashboard/help', icon: <HelpCircle size={18} /> },
+  { label: 'Settings', to: '/settings', icon: <Settings size={18} /> },
+  { label: 'Help', to: '/help', icon: <HelpCircle size={18} /> },
 ]
 
 interface SideNavProps {
@@ -95,6 +100,12 @@ export const SideNav = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     )
   }
 
+  const GroupLabel = ({ label }: { label: string }) => (
+    <p className={cn('text-[10px] font-bold text-surface-500 uppercase tracking-widest px-2 mb-1 mt-4', collapsed && 'hidden')}>
+      {label}
+    </p>
+  )
+
   const sidebarContent = (
     <div className={cn('flex flex-col h-full', collapsed ? 'items-center' : '')}>
       {/* Logo */}
@@ -123,15 +134,23 @@ export const SideNav = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
 
       {/* Nav items */}
       <nav className={cn('flex-1 flex flex-col gap-0.5 overflow-y-auto px-2 no-scrollbar', collapsed && 'px-1')}>
-        <p className={cn('text-[10px] font-bold text-surface-500 uppercase tracking-widest px-2 mb-1 mt-1', collapsed && 'hidden')}>
-          Menu
-        </p>
-        {navItems.map((item) => (
+        <GroupLabel label="Main" />
+        {navItems.filter(i => i.group === 'main').map((item) => (
+          <NavItemComponent key={item.to} item={item} />
+        ))}
+
+        <GroupLabel label="Productivity" />
+        {navItems.filter(i => i.group === 'productivity').map((item) => (
+          <NavItemComponent key={item.to} item={item} />
+        ))}
+
+        <GroupLabel label="System" />
+        {navItems.filter(i => i.group === 'system').map((item) => (
           <NavItemComponent key={item.to} item={item} />
         ))}
 
         <p className={cn('text-[10px] font-bold text-surface-500 uppercase tracking-widest px-2 mb-1 mt-4', collapsed && 'hidden')}>
-          System
+          Settings
         </p>
         {bottomItems.map((item) => (
           <NavItemComponent key={item.to} item={item} />

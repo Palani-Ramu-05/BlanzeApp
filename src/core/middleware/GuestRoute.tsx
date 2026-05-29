@@ -6,5 +6,5 @@ import { FullPageLoader } from '@components/index'
 export const GuestRoute = () => {
   const { isAuthenticated, initializing } = useAppSelector((s) => s.auth)
   if (initializing) return <FullPageLoader />
-  return isAuthenticated ? <Navigate to={ROUTES.DASHBOARD} replace /> : <Outlet />
+  return isAuthenticated ? <Navigate to={'/'} replace /> : <Outlet />
 }

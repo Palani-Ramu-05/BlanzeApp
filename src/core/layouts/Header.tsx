@@ -22,6 +22,9 @@ const breadcrumbMap: Record<string, string> = {
   help: 'Help',
   vaultdrop: 'VaultDrop',
   devtools: 'DevTools',
+  timer: 'Timer',
+  'task-board': 'Task Board',
+  notes: 'Notes',
 }
 
 export const Header = ({ onMenuClick }: HeaderProps) => {

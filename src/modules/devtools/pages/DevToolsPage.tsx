@@ -30,6 +30,8 @@ const HTTPStatusTool = lazy(() => import('../components/tools/HTTPStatusTool').t
 const TokenGeneratorTool = lazy(() => import('../components/tools/TokenGeneratorTool').then(m => ({ default: m.TokenGeneratorTool })))
 const PasswordGeneratorTool = lazy(() => import('../components/tools/PasswordGeneratorTool').then(m => ({ default: m.PasswordGeneratorTool })))
 const JWTTool = lazy(() => import('../components/tools/JWTTool').then(m => ({ default: m.JWTTool })))
+const TypingTestTool = lazy(() => import('../components/tools/TypingTestTool').then(m => ({ default: m.TypingTestTool })))
+const SpinnerWheelTool = lazy(() => import('../components/tools/SpinnerWheelTool').then(m => ({ default: m.SpinnerWheelTool })))
 
 const TOOL_COMPONENTS: Record<string, React.LazyExoticComponent<() => React.ReactElement>> = {
   'base64': Base64Tool,
@@ -50,6 +52,8 @@ const TOOL_COMPONENTS: Record<string, React.LazyExoticComponent<() => React.Reac
   'token-generator': TokenGeneratorTool,
   'password-generator': PasswordGeneratorTool,
   'jwt': JWTTool,
+  'typing-test': TypingTestTool,
+  'spinner-wheel': SpinnerWheelTool,
 }
 
 const CATEGORY_ICONS: Record<CategoryId, React.ReactNode> = {

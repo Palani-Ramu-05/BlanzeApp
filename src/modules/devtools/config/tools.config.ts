@@ -172,6 +172,22 @@ export const ALL_TOOLS: ToolDef[] = [
     category: 'utility',
     keywords: ['http', 'status', 'code', '404', '200', 'rest', 'api'],
   },
+  {
+    id: 'typing-test',
+    name: 'Typing Speed Test',
+    description: 'Test and improve your typing speed. WPM tracking, accuracy, difficulty levels, and coding mode.',
+    category: 'utility',
+    keywords: ['typing', 'wpm', 'speed', 'keyboard', 'test', 'accuracy'],
+    badge: 'new',
+  },
+  {
+    id: 'spinner-wheel',
+    name: 'Spinner Wheel',
+    description: 'Animated spinning wheel for random picks. Weighted probability, presets, team picker, history.',
+    category: 'utility',
+    keywords: ['spinner', 'wheel', 'random', 'pick', 'lottery', 'decision'],
+    badge: 'new',
+  },
 
   // Cryptography
   {

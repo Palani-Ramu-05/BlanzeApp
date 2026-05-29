@@ -14,6 +14,8 @@ import type {
   FormFile,
 } from '../dto/types/fetchlab.types'
 import { generateId } from '@utils/index'
+import { fetchlabService } from '../services/fetchlab.service'
+import { supabase } from '@core/config/supabaseClient'
 
 const LS_ITEMS = 'fl2_items'
 const LS_ENV = 'fl2_env'
@@ -31,6 +33,32 @@ const loadHistory = (): HistoryEntry[] => {
 const saveItems = (items: FetchItem[]) => localStorage.setItem(LS_ITEMS, JSON.stringify(items))
 const saveEnv = (vars: EnvVar[]) => localStorage.setItem(LS_ENV, JSON.stringify(vars))
 const saveHistory = (hist: HistoryEntry[]) => localStorage.setItem(LS_HIST, JSON.stringify(hist))
+
+// Debounced Supabase workspace sync (1.5 s after last mutation)
+let syncTimer: ReturnType<typeof setTimeout> | null = null
+const scheduleSyncWorkspace = (items: FetchItem[], envVars: EnvVar[]) => {
+  if (syncTimer) clearTimeout(syncTimer)
+  syncTimer = setTimeout(async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) await fetchlabService.saveWorkspace(user.id, items, envVars)
+  }, 1500)
+}
+
+// ── Async thunks ──────────────────────────────────────────────
+export const loadFetchLabFromSupabase = createAsyncThunk(
+  'fetchlab/loadFromSupabase',
+  async (_, { rejectWithValue }) => {
+    try {
+      const [workspace, history] = await Promise.all([
+        fetchlabService.loadWorkspace(),
+        fetchlabService.loadHistory(),
+      ])
+      return { workspace, history }
+    } catch (err) {
+      return rejectWithValue((err as Error).message)
+    }
+  },
+)
 
 export const blankRequest = (name = 'New Request'): FetchRequest => ({
   id: generateId(), type: 'request', name,
@@ -222,12 +250,14 @@ const fetchlabSlice = createSlice({
       state.currentRequest = req
       state.response = null
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     createFolder(state, action: PayloadAction<string>) {
       const folder: FetchFolder = { id: generateId(), type: 'folder', name: action.payload, open: true, children: [] }
       state.items.push(folder)
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     duplicateRequest(state, action: PayloadAction<string>) {
@@ -239,6 +269,7 @@ const fetchlabSlice = createSlice({
       const idx = arr.findIndex((i) => i.id === action.payload)
       arr.splice(idx + 1, 0, copy)
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     moveToFolder(state, action: PayloadAction<{ id: string; targetFolderId: string | null }>) {
@@ -256,6 +287,7 @@ const fetchlabSlice = createSlice({
         state.items.push(clone)
       }
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     reorderItems(state, action: PayloadAction<{ dragId: string; targetId: string; pos: 'before' | 'after' | 'into' }>) {
@@ -275,6 +307,7 @@ const fetchlabSlice = createSlice({
         else state.items.push(clone)
       }
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     selectRequest(state, action: PayloadAction<string>) {
@@ -312,6 +345,7 @@ const fetchlabSlice = createSlice({
       }
       update(state.items)
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     deleteItem(state, action: PayloadAction<string>) {
@@ -322,6 +356,7 @@ const fetchlabSlice = createSlice({
       state.items = remove(state.items)
       if (state.currentId === action.payload) { state.currentId = null; state.currentRequest = null; state.response = null }
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     renameItem(state, action: PayloadAction<{ id: string; name: string }>) {
@@ -337,6 +372,7 @@ const fetchlabSlice = createSlice({
       }
       rename(state.items)
       saveItems(state.items)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     toggleFolder(state, action: PayloadAction<string>) {
@@ -354,17 +390,20 @@ const fetchlabSlice = createSlice({
     addEnvVar(state) {
       state.envVars.push({ id: generateId(), enabled: true, key: '', value: '' })
       saveEnv(state.envVars)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
     updateEnvVar(state, action: PayloadAction<{ id: string; field: 'key' | 'value' | 'enabled'; value: string | boolean }>) {
       const v = state.envVars.find((x) => x.id === action.payload.id)
-      if (v) { (v[action.payload.field] as string | boolean) = action.payload.value; saveEnv(state.envVars) }
+      if (v) { (v[action.payload.field] as string | boolean) = action.payload.value; saveEnv(state.envVars); scheduleSyncWorkspace(state.items, state.envVars) }
     },
     deleteEnvVar(state, action: PayloadAction<string>) {
       state.envVars = state.envVars.filter((v) => v.id !== action.payload)
       saveEnv(state.envVars)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
     setEnvVars(state, action: PayloadAction<EnvVar[]>) {
       state.envVars = action.payload; saveEnv(action.payload)
+      scheduleSyncWorkspace(state.items, state.envVars)
     },
 
     // ── KV rows ──────────────────────────────────────────
@@ -428,7 +467,14 @@ const fetchlabSlice = createSlice({
     setSidebarTab(state, action: PayloadAction<'collections' | 'history'>) { state.sidebarTab = action.payload },
 
     // ── Misc ─────────────────────────────────────────────
-    clearHistory(state) { state.history = []; saveHistory([]) },
+    clearHistory(state) {
+      state.history = []
+      saveHistory([])
+      // Also clear from Supabase (fire and forget)
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) fetchlabService.clearHistory(user.id)
+      })
+    },
     clearResponse(state) { state.response = null },
 
     importData(state, action: PayloadAction<{ items: FetchItem[]; envVars?: EnvVar[] }>) {
@@ -441,6 +487,28 @@ const fetchlabSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+      // Load from Supabase on init
+      .addCase(loadFetchLabFromSupabase.fulfilled, (state, action) => {
+        const { workspace, history } = action.payload as {
+          workspace: { items: FetchItem[]; envVars: EnvVar[] } | null
+          history: HistoryEntry[]
+        }
+        if (workspace) {
+          // Only replace if Supabase has data (don't wipe local work if offline)
+          if (workspace.items.length > 0 || workspace.envVars.length > 0) {
+            state.items = workspace.items
+            state.envVars = workspace.envVars
+            saveItems(state.items)
+            saveEnv(state.envVars)
+          }
+        }
+        if (history.length > 0) {
+          state.history = history
+          saveHistory(history)
+        }
+      })
+
+      // Send request
       .addCase(sendRequest.pending, (state) => { state.sending = true; state.response = null })
       .addCase(sendRequest.fulfilled, (state, action) => {
         state.sending = false
@@ -457,6 +525,10 @@ const fetchlabSlice = createSlice({
           }
           state.history = [entry, ...state.history].slice(0, 60)
           saveHistory(state.history)
+          // Sync to Supabase (fire and forget)
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) fetchlabService.addHistory(user.id, entry)
+          })
         }
       })
       .addCase(sendRequest.rejected, (state, action) => {

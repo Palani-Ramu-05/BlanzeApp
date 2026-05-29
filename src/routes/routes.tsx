@@ -31,6 +31,15 @@ const VaultDropPage = lazy(() =>
 const DevToolsPage = lazy(() =>
   import('@modules/devtools/pages/DevToolsPage').then((m) => ({ default: m.DevToolsPage })),
 )
+const TimerPage = lazy(() =>
+  import('@modules/timer/pages/TimerPage').then((m) => ({ default: m.TimerPage })),
+)
+const TaskBoardPage = lazy(() =>
+  import('@modules/taskboard/pages/TaskBoardPage').then((m) => ({ default: m.TaskBoardPage })),
+)
+const NotesPage = lazy(() =>
+  import('@modules/notes/pages/NotesPage').then((m) => ({ default: m.NotesPage })),
+)
 
 const withSuspense = (component: React.ReactNode) => (
   <Suspense fallback={<FullPageLoader />}>
@@ -40,8 +49,8 @@ const withSuspense = (component: React.ReactNode) => (
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Navigate to="/auth/signin" replace />,
+    path: '/auth',
+    element: <Navigate to="/signin" replace />,
   },
 
   // Auth routes (guest only)
@@ -66,57 +75,51 @@ export const router = createBrowserRouter([
       {
         element: <HomeLayout />,
         children: [
-          { path: '/dashboard', element: withSuspense(<DashboardPage />) },
+          { path: '/', element: withSuspense(<DashboardPage />) },
+          { path: '/fetchlab', element: withSuspense(<FetchLabPage />) },
+          { path: '/vaultdrop', element: withSuspense(<VaultDropPage />) },
+          { path: '/devtools', element: withSuspense(<DevToolsPage />) },
+          { path: '/timer', element: withSuspense(<TimerPage />) },
+          { path: '/task-board', element: withSuspense(<TaskBoardPage />) },
+          { path: '/notes', element: withSuspense(<NotesPage />) },
           {
-            path: '/dashboard/fetchlab',
-            element: withSuspense(<FetchLabPage />),
-          },
-          {
-            path: '/dashboard/vaultdrop',
-            element: withSuspense(<VaultDropPage />),
-          },
-          {
-            path: '/dashboard/devtools',
-            element: withSuspense(<DevToolsPage />),
-          },
-          {
-            path: '/dashboard/analytics',
+            path: '/analytics',
             element: withSuspense(
               <div className="p-6 text-surface-400 text-sm">Analytics — Coming Soon</div>,
             ),
           },
           {
-            path: '/dashboard/users',
+            path: '/users',
             element: withSuspense(
               <div className="p-6 text-surface-400 text-sm">Users — Coming Soon</div>,
             ),
           },
           {
-            path: '/dashboard/packages',
+            path: '/packages',
             element: withSuspense(
               <div className="p-6 text-surface-400 text-sm">Packages — Coming Soon</div>,
             ),
           },
           {
-            path: '/dashboard/security',
+            path: '/security',
             element: withSuspense(
               <div className="p-6 text-surface-400 text-sm">Security — Coming Soon</div>,
             ),
           },
           {
-            path: '/dashboard/notifications',
+            path: '/notifications',
             element: withSuspense(
               <div className="p-6 text-surface-400 text-sm">Notifications — Coming Soon</div>,
             ),
           },
           {
-            path: '/dashboard/settings',
+            path: '/settings',
             element: withSuspense(
               <div className="p-6 text-surface-400 text-sm">Settings — Coming Soon</div>,
             ),
           },
           {
-            path: '/dashboard/help',
+            path: '/help',
             element: withSuspense(
               <div className="p-6 text-surface-400 text-sm">Help — Coming Soon</div>,
             ),
