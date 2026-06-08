@@ -96,7 +96,7 @@ export const SignInPage = () => {
           </Link>
         </div>
 
-        <Button
+        {/* <Button
           type="submit"
           fullWidth
           size="lg"
@@ -104,7 +104,7 @@ export const SignInPage = () => {
           iconRight={!loading ? <ArrowRight size={16} /> : undefined}
         >
           {loading ? 'Signing in…' : 'Sign In'}
-        </Button>
+        </Button> */}
       </form>
 
       <div className="relative">
