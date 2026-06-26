@@ -16,14 +16,18 @@ export interface UploadProgress {
   error?: string
 }
 
+export type SortBy = 'name' | 'size' | 'date'
+export type SortOrder = 'asc' | 'desc'
+
 export interface VaultDropState {
   files: VaultFile[]
   loading: boolean
   uploading: boolean
   uploadProgress: UploadProgress[]
   error: string | null
-  deleteTarget: VaultFile | null
   deleting: boolean
+  selectedFileIds: string[]
+  pendingDeletion: VaultFile[]
 }
 
 export const ALLOWED_MIME_TYPES = [
@@ -40,5 +44,5 @@ export const ALLOWED_MIME_TYPES = [
 ]
 
 export const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.txt', '.json', '.pdf', '.zip']
-export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+export const MAX_FILE_SIZE = 30 * 1024 * 1024 // 30 MB
 export const BUCKET_NAME = 'vaultdrop-storage'

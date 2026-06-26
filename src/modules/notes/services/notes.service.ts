@@ -1,7 +1,6 @@
 import { supabase } from '@core/config/supabaseClient'
-import type { Note, NoteFolder } from '../dto/types/notes.types'
+import type { Note, NoteFolder, NoteType } from '../dto/types/notes.types'
 
-// ── DB row shapes ─────────────────────────────────────────────
 interface DbFolder {
   id: string
   user_id: string
@@ -20,6 +19,8 @@ interface DbNote {
   title: string
   content: object | null
   content_text: string
+  raw_content: string | null
+  note_type: string | null
   icon: string
   cover_color: string
   is_pinned: boolean
@@ -50,6 +51,8 @@ function toNote(r: DbNote): Note {
     title: r.title,
     content: r.content,
     contentText: r.content_text,
+    rawContent: r.raw_content ?? '',
+    noteType: (r.note_type as NoteType) ?? 'rich',
     icon: r.icon,
     coverColor: r.cover_color,
     isPinned: r.is_pinned,
@@ -123,6 +126,8 @@ export const notesService = {
       title: note.title,
       content: note.content,
       content_text: note.contentText,
+      raw_content: note.rawContent ?? '',
+      note_type: note.noteType ?? 'rich',
       icon: note.icon,
       cover_color: note.coverColor,
       is_pinned: note.isPinned,
@@ -136,17 +141,20 @@ export const notesService = {
 
   async updateNote(id: string, changes: Partial<Note>): Promise<void> {
     const dbChanges: Record<string, unknown> = {}
-    if (changes.title !== undefined)      dbChanges.title        = changes.title
-    if (changes.content !== undefined)    dbChanges.content      = changes.content
+    if (changes.title !== undefined)       dbChanges.title        = changes.title
+    if (changes.content !== undefined)     dbChanges.content      = changes.content
     if (changes.contentText !== undefined) dbChanges.content_text = changes.contentText
-    if (changes.icon !== undefined)       dbChanges.icon         = changes.icon
-    if (changes.coverColor !== undefined) dbChanges.cover_color  = changes.coverColor
-    if (changes.isPinned !== undefined)   dbChanges.is_pinned    = changes.isPinned
-    if (changes.isFavorite !== undefined) dbChanges.is_favorite  = changes.isFavorite
-    if (changes.isArchived !== undefined) dbChanges.is_archived  = changes.isArchived
-    if (changes.tags !== undefined)       dbChanges.tags         = changes.tags
-    if (changes.wordCount !== undefined)  dbChanges.word_count   = changes.wordCount
-    if (changes.folderId !== undefined)   dbChanges.folder_id    = changes.folderId
+    if (changes.rawContent !== undefined)  dbChanges.raw_content  = changes.rawContent
+    if (changes.noteType !== undefined)    dbChanges.note_type    = changes.noteType
+    if (changes.icon !== undefined)        dbChanges.icon         = changes.icon
+    if (changes.coverColor !== undefined)  dbChanges.cover_color  = changes.coverColor
+    if (changes.isPinned !== undefined)    dbChanges.is_pinned    = changes.isPinned
+    if (changes.isFavorite !== undefined)  dbChanges.is_favorite  = changes.isFavorite
+    if (changes.isArchived !== undefined)  dbChanges.is_archived  = changes.isArchived
+    if (changes.tags !== undefined)        dbChanges.tags         = changes.tags
+    if (changes.wordCount !== undefined)   dbChanges.word_count   = changes.wordCount
+    if (changes.folderId !== undefined)    dbChanges.folder_id    = changes.folderId
+    if (changes.updatedAt !== undefined)   dbChanges.updated_at   = changes.updatedAt
 
     const { error } = await supabase.from('notes').update(dbChanges).eq('id', id)
     if (error) console.error('[Notes] updateNote:', error.message)

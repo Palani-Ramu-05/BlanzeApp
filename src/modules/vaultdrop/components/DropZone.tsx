@@ -30,7 +30,7 @@ export const DropZone = ({ onFiles, disabled }: DropZoneProps) => {
       const files = Array.from(fileList)
       const oversized = files.find((f) => f.size > MAX_FILE_SIZE)
       if (oversized) {
-        setDragError(`"${oversized.name}" exceeds the 5 MB limit.`)
+        setDragError(`"${oversized.name}" exceeds the 30 MB limit.`)
         setTimeout(() => setDragError(null), 3000)
         return
       }
@@ -135,7 +135,7 @@ export const DropZone = ({ onFiles, disabled }: DropZoneProps) => {
               {isDragOver ? 'Drop files here' : 'Drag & drop files, or click to browse'}
             </p>
             <p className="text-xs text-surface-400">
-              Images, GIFs, TXT, JSON, PDF, ZIP · Max 5 MB per file
+              Images, GIFs, TXT, JSON, PDF, ZIP · Max 30 MB per file
             </p>
           </div>
 

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
 import {
-  type Note, type NoteFolder, type NotesState,
-  loadNotesState, saveNotesState,
+  type Note, type NoteFolder, type NotesState, type NoteType,
+  loadNotesState, saveNotesState, makeNote,
 } from '../dto/types/notes.types'
 import { notesService } from '../services/notes.service'
 import { supabase } from '@core/config/supabaseClient'
@@ -15,11 +15,11 @@ const initialState: NotesState = {
   activeFolderId: null,
   searchQuery: '',
   sidebarView: 'all',
+  sortBy: 'updated',
   isLoading: false,
   isSaving: false,
 }
 
-// Debounced autosave for note content (1 s after last keystroke)
 const autosaveTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 function scheduleNoteAutosave(id: string, changes: Partial<Note>) {
@@ -34,7 +34,6 @@ function scheduleNoteAutosave(id: string, changes: Partial<Note>) {
 
 // ── Async thunks ──────────────────────────────────────────────
 
-/** Load notes + folders from Supabase on init */
 export const fetchNotesFromSupabase = createAsyncThunk(
   'notes/fetchFromSupabase',
   async (_, { rejectWithValue }) => {
@@ -50,92 +49,22 @@ export const fetchNotesFromSupabase = createAsyncThunk(
   },
 )
 
-export const createNoteAsync = createAsyncThunk(
-  'notes/createNoteAsync',
-  async (payload: { folderId: string | null; title?: string }) => {
-    const note: Note = {
-      id: crypto.randomUUID(),
-      folderId: payload.folderId,
-      title: payload.title ?? 'Untitled',
-      content: { type: 'doc', content: [{ type: 'paragraph' }] },
-      contentText: '',
-      icon: '📝',
-      coverColor: '#3b82f6',
-      isPinned: false,
-      isFavorite: false,
-      isArchived: false,
-      tags: [],
-      wordCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) await notesService.createNote(note, user.id)
-    return note
-  },
-)
-
-export const deleteNoteAsync = createAsyncThunk(
-  'notes/deleteNoteAsync',
-  async (id: string) => {
-    await notesService.deleteNote(id)
-    return id
-  },
-)
-
-export const createFolderAsync = createAsyncThunk(
-  'notes/createFolderAsync',
-  async (payload: { name: string; color: string; icon: string; parentId?: string | null }, { getState }) => {
-    const folder: NoteFolder = {
-      id: crypto.randomUUID(),
-      name: payload.name,
-      icon: payload.icon ?? '📁',
-      color: payload.color ?? '#3b82f6',
-      parentId: payload.parentId ?? null,
-      position: (getState() as { notes: NotesState }).notes.folders.length,
-      createdAt: new Date().toISOString(),
-    }
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) await notesService.createFolder(folder, user.id)
-    return folder
-  },
-)
-
-export const deleteFolderAsync = createAsyncThunk(
-  'notes/deleteFolderAsync',
-  async (id: string) => {
-    await notesService.deleteFolder(id)
-    return id
-  },
-)
-
 // ── Slice ─────────────────────────────────────────────────────
 const notesSlice = createSlice({
   name: 'notes',
   initialState,
   reducers: {
-    // Local-only note mutations (still dispatch Supabase via schedule*)
-    createNote(state, action: PayloadAction<{ folderId: string | null; title?: string }>) {
-      const note: Note = {
-        id: crypto.randomUUID(),
+    createNote(state, action: PayloadAction<{ folderId: string | null; title?: string; noteType?: NoteType }>) {
+      const note = makeNote({
         folderId: action.payload.folderId,
         title: action.payload.title ?? 'Untitled',
-        content: { type: 'doc', content: [{ type: 'paragraph' }] },
-        contentText: '',
+        noteType: action.payload.noteType ?? 'rich',
         icon: '📝',
-        coverColor: '#3b82f6',
-        isPinned: false,
-        isFavorite: false,
-        isArchived: false,
-        tags: [],
-        wordCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
+        coverColor: '',
+      })
       state.notes.unshift(note)
       state.activeNoteId = note.id
       saveNotesState({ folders: state.folders, notes: state.notes })
-      // Persist to Supabase (fire and forget — editor will call updateNote immediately after)
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (user) notesService.createNote(note, user.id)
       })
@@ -150,7 +79,6 @@ const notesSlice = createSlice({
           updatedAt: new Date().toISOString(),
         }
         saveNotesState({ folders: state.folders, notes: state.notes })
-        // Debounced sync (avoids hammering DB on every keystroke)
         scheduleNoteAutosave(action.payload.id, {
           ...action.payload.changes,
           updatedAt: state.notes[idx].updatedAt,
@@ -161,10 +89,33 @@ const notesSlice = createSlice({
     deleteNote(state, action: PayloadAction<string>) {
       state.notes = state.notes.filter(n => n.id !== action.payload)
       if (state.activeNoteId === action.payload) {
-        state.activeNoteId = state.notes[0]?.id ?? null
+        state.activeNoteId = state.notes.find(n => !n.isArchived)?.id ?? null
       }
       saveNotesState({ folders: state.folders, notes: state.notes })
       notesService.deleteNote(action.payload)
+    },
+
+    archiveNote(state, action: PayloadAction<string>) {
+      const note = state.notes.find(n => n.id === action.payload)
+      if (note) {
+        note.isArchived = true
+        note.updatedAt = new Date().toISOString()
+        if (state.activeNoteId === action.payload) {
+          state.activeNoteId = state.notes.find(n => !n.isArchived && n.id !== action.payload)?.id ?? null
+        }
+        saveNotesState({ folders: state.folders, notes: state.notes })
+        notesService.updateNote(note.id, { isArchived: true })
+      }
+    },
+
+    restoreNote(state, action: PayloadAction<string>) {
+      const note = state.notes.find(n => n.id === action.payload)
+      if (note) {
+        note.isArchived = false
+        note.updatedAt = new Date().toISOString()
+        saveNotesState({ folders: state.folders, notes: state.notes })
+        notesService.updateNote(note.id, { isArchived: false })
+      }
     },
 
     createFolder(state, action: PayloadAction<{ name: string; color: string; icon: string; parentId?: string | null }>) {
@@ -207,6 +158,10 @@ const notesSlice = createSlice({
       state.sidebarView = action.payload
     },
 
+    setSortBy(state, action: PayloadAction<NotesState['sortBy']>) {
+      state.sortBy = action.payload
+    },
+
     setSaving(state, action: PayloadAction<boolean>) {
       state.isSaving = action.payload
     },
@@ -234,64 +189,30 @@ const notesSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // Load from Supabase
       .addCase(fetchNotesFromSupabase.pending, (state) => {
         state.isLoading = true
       })
       .addCase(fetchNotesFromSupabase.fulfilled, (state, action) => {
         state.isLoading = false
         const { folders, notes } = action.payload as { folders: NoteFolder[]; notes: Note[] }
-        // Replace with Supabase data only if it has content
         if (folders.length > 0 || notes.length > 0) {
           state.folders = folders
           state.notes = notes
-          state.activeNoteId = notes[0]?.id ?? null
+          state.activeNoteId = notes.find(n => !n.isArchived)?.id ?? null
           saveNotesState({ folders, notes })
         }
       })
       .addCase(fetchNotesFromSupabase.rejected, (state) => {
         state.isLoading = false
-        // Keep local data on error
-      })
-
-      // Async create note
-      .addCase(createNoteAsync.fulfilled, (state, action) => {
-        state.notes.unshift(action.payload)
-        state.activeNoteId = action.payload.id
-        saveNotesState({ folders: state.folders, notes: state.notes })
-      })
-
-      // Async delete note
-      .addCase(deleteNoteAsync.fulfilled, (state, action) => {
-        state.notes = state.notes.filter(n => n.id !== action.payload)
-        if (state.activeNoteId === action.payload) {
-          state.activeNoteId = state.notes[0]?.id ?? null
-        }
-        saveNotesState({ folders: state.folders, notes: state.notes })
-      })
-
-      // Async create folder
-      .addCase(createFolderAsync.fulfilled, (state, action) => {
-        state.folders.push(action.payload)
-        saveNotesState({ folders: state.folders, notes: state.notes })
-      })
-
-      // Async delete folder
-      .addCase(deleteFolderAsync.fulfilled, (state, action) => {
-        state.folders = state.folders.filter(f => f.id !== action.payload)
-        state.notes = state.notes.map(n =>
-          n.folderId === action.payload ? { ...n, folderId: null } : n,
-        )
-        saveNotesState({ folders: state.folders, notes: state.notes })
       })
   },
 })
 
 export const {
-  createNote, updateNote, deleteNote,
+  createNote, updateNote, deleteNote, archiveNote, restoreNote,
   createFolder, deleteFolder,
   setActiveNote, setActiveFolder,
-  setSearchQuery, setSidebarView, setSaving,
+  setSearchQuery, setSidebarView, setSortBy, setSaving,
   toggleFavorite, togglePin,
 } = notesSlice.actions
 

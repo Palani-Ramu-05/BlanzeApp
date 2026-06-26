@@ -15,8 +15,9 @@ const initialState: VaultDropState = {
   uploading: false,
   uploadProgress: [],
   error: null,
-  deleteTarget: null,
   deleting: false,
+  selectedFileIds: [],
+  pendingDeletion: [],
 }
 
 // ── Thunks ──────────────────────────────────────────────────
@@ -94,15 +95,23 @@ export const uploadFiles = createAsyncThunk(
   },
 )
 
-export const deleteFile = createAsyncThunk(
-  'vaultdrop/deleteFile',
-  async (file: VaultFile, { rejectWithValue }) => {
-    try {
-      await deleteFileService(file)
-      return file.id
-    } catch (err: unknown) {
-      return rejectWithValue((err as Error).message)
+// Commits the actual deletion of the provided files to Supabase
+export const commitPendingDeletion = createAsyncThunk(
+  'vaultdrop/commitPendingDeletion',
+  async (files: VaultFile[], { rejectWithValue }) => {
+    if (!files.length) return []
+    const errors: string[] = []
+    for (const file of files) {
+      try {
+        await deleteFileService(file)
+      } catch (err: unknown) {
+        errors.push(`${file.file_name}: ${(err as Error).message}`)
+      }
     }
+    if (errors.length > 0) {
+      return rejectWithValue({ errors: errors.join('\n'), files })
+    }
+    return files.map((f) => f.id)
   },
 )
 
@@ -134,11 +143,47 @@ const vaultDropSlice = createSlice({
     clearProgress(state) {
       state.uploadProgress = state.uploadProgress.filter((p) => p.status === 'uploading')
     },
-    setDeleteTarget(state, action: PayloadAction<VaultFile | null>) {
-      state.deleteTarget = action.payload
-    },
     clearError(state) {
       state.error = null
+    },
+
+    // ── Selection ──
+    toggleSelectFile(state, action: PayloadAction<string>) {
+      const id = action.payload
+      const idx = state.selectedFileIds.indexOf(id)
+      if (idx >= 0) {
+        state.selectedFileIds.splice(idx, 1)
+      } else {
+        state.selectedFileIds.push(id)
+      }
+    },
+    selectAllFiles(state) {
+      state.selectedFileIds = state.files.map((f) => f.id)
+    },
+    clearSelection(state) {
+      state.selectedFileIds = []
+    },
+
+    // ── Soft delete / undo ──
+    // Immediately hides files from UI; actual Supabase delete happens via commitPendingDeletion after 5s
+    softDeleteFiles(state, action: PayloadAction<VaultFile[]>) {
+      const ids = new Set(action.payload.map((f) => f.id))
+      // Merge new files into pendingDeletion (avoid duplicates)
+      const existingPendingIds = new Set(state.pendingDeletion.map((f) => f.id))
+      const newPending = action.payload.filter((f) => !existingPendingIds.has(f.id))
+      state.pendingDeletion = [...state.pendingDeletion, ...newPending]
+      state.files = state.files.filter((f) => !ids.has(f.id))
+      state.selectedFileIds = state.selectedFileIds.filter((id) => !ids.has(id))
+    },
+    // Restores all pending files back to the list
+    restorePendingFiles(state) {
+      const existingIds = new Set(state.files.map((f) => f.id))
+      const toRestore = state.pendingDeletion.filter((f) => !existingIds.has(f.id))
+      // Re-insert in original date order
+      state.files = [...toRestore, ...state.files].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
+      state.pendingDeletion = []
     },
   },
   extraReducers: (builder) => {
@@ -150,6 +195,8 @@ const vaultDropSlice = createSlice({
       .addCase(loadFiles.fulfilled, (state, action) => {
         state.loading = false
         state.files = action.payload
+        state.pendingDeletion = []
+        state.selectedFileIds = []
       })
       .addCase(loadFiles.rejected, (state, action) => {
         state.loading = false
@@ -171,26 +218,41 @@ const vaultDropSlice = createSlice({
       })
 
     builder
-      .addCase(deleteFile.pending, (state) => {
+      .addCase(commitPendingDeletion.pending, (state) => {
         state.deleting = true
       })
-      .addCase(deleteFile.fulfilled, (state, action) => {
+      .addCase(commitPendingDeletion.fulfilled, (state) => {
         state.deleting = false
-        state.files = state.files.filter((f) => f.id !== action.payload)
-        state.deleteTarget = null
-        toast.success('File deleted successfully')
+        state.pendingDeletion = []
       })
-      .addCase(deleteFile.rejected, (state, action) => {
+      .addCase(commitPendingDeletion.rejected, (state, action) => {
         state.deleting = false
-        toast.error((action.payload as string) || 'Delete failed')
+        // Restore files that failed to delete
+        const payload = action.payload as { errors: string; files: VaultFile[] } | undefined
+        if (payload?.files) {
+          const existingIds = new Set(state.files.map((f) => f.id))
+          const toRestore = payload.files.filter((f) => !existingIds.has(f.id))
+          state.files = [...toRestore, ...state.files]
+        }
+        state.pendingDeletion = []
+        toast.error('Some files could not be deleted. They have been restored.')
       })
 
-    builder
-      .addCase(downloadFile.rejected, (_state, action) => {
-        toast.error((action.payload as string) || 'Download failed')
-      })
+    builder.addCase(downloadFile.rejected, (_state, action) => {
+      toast.error((action.payload as string) || 'Download failed')
+    })
   },
 })
 
-export const { setProgress, clearProgress, setDeleteTarget, clearError } = vaultDropSlice.actions
+export const {
+  setProgress,
+  clearProgress,
+  clearError,
+  toggleSelectFile,
+  selectAllFiles,
+  clearSelection,
+  softDeleteFiles,
+  restorePendingFiles,
+} = vaultDropSlice.actions
+
 export default vaultDropSlice.reducer

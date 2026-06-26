@@ -1,5 +1,4 @@
 export type Priority = 'urgent' | 'high' | 'medium' | 'low'
-export type TaskStatus = 'backlog' | 'todo' | 'in-progress' | 'review' | 'done'
 
 export interface SubTask {
   id: string
@@ -14,14 +13,47 @@ export interface TaskComment {
   createdAt: string
 }
 
+export interface Space {
+  id: string
+  name: string
+  color: string
+  icon: string
+  description: string
+  position: number
+  createdAt: string
+}
+
+export interface Project {
+  id: string
+  spaceId: string
+  name: string
+  description: string
+  color: string
+  icon: string
+  status: 'active' | 'archived'
+  position: number
+  createdAt: string
+}
+
+export interface Column {
+  id: string
+  projectId: string
+  name: string
+  color: string
+  position: number
+  isDone: boolean
+}
+
 export interface Task {
   id: string
+  spaceId: string
+  projectId: string
+  columnId: string
   title: string
   description: string
   priority: Priority
   labels: string[]
   dueDate: string | null
-  columnId: string
   position: number
   isCompleted: boolean
   subtasks: SubTask[]
@@ -33,115 +65,155 @@ export interface Task {
   updatedAt: string
 }
 
-export interface Column {
-  id: string
-  title: string
-  color: string
-  icon: string
-  maxCards?: number
-  description?: string
-}
-
-export interface Board {
-  id: string
-  name: string
-  description: string
+export interface TaskBoardState {
+  spaces: Space[]
+  projects: Project[]
   columns: Column[]
   tasks: Task[]
-}
-
-export interface TaskBoardState {
-  board: Board
-  isLoading: boolean
+  activeSpaceId: string | null
+  activeProjectId: string | null
   activeTaskId: string | null
   filterPriority: Priority | 'all'
   filterLabel: string | 'all'
   searchQuery: string
   view: 'kanban' | 'list'
+  isLoading: boolean
 }
 
-export const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: string; border: string }> = {
-  urgent: { label: 'Urgent', color: '#ef4444', bg: 'bg-red-500/15', border: 'border-red-500/30' },
-  high: { label: 'High', color: '#f59e0b', bg: 'bg-amber-500/15', border: 'border-amber-500/30' },
-  medium: { label: 'Medium', color: '#3b82f6', bg: 'bg-blue-500/15', border: 'border-blue-500/30' },
-  low: { label: 'Low', color: '#10b981', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' },
+// ── UI config ─────────────────────────────────────────────────
+
+export const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: string; border: string; dot: string }> = {
+  urgent: { label: 'Urgent', color: '#ef4444', bg: 'bg-red-500/15',     border: 'border-red-500/30',     dot: 'bg-red-500' },
+  high:   { label: 'High',   color: '#f59e0b', bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   dot: 'bg-amber-500' },
+  medium: { label: 'Medium', color: '#3b82f6', bg: 'bg-blue-500/15',    border: 'border-blue-500/30',    dot: 'bg-blue-500' },
+  low:    { label: 'Low',    color: '#10b981', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', dot: 'bg-emerald-500' },
 }
 
 export const LABEL_COLORS: Record<string, string> = {
   frontend: '#3b82f6',
-  backend: '#10b981',
-  design: '#8b5cf6',
-  bug: '#ef4444',
-  feature: '#f59e0b',
-  docs: '#64748b',
-  testing: '#ec4899',
-  devops: '#06b6d4',
+  backend:  '#10b981',
+  design:   '#8b5cf6',
+  bug:      '#ef4444',
+  feature:  '#f59e0b',
+  docs:     '#64748b',
+  testing:  '#ec4899',
+  devops:   '#06b6d4',
 }
 
-export const DEFAULT_BOARD: Board = {
-  id: 'default',
-  name: 'My Board',
-  description: 'Default project board',
-  columns: [
-    { id: 'backlog', title: 'Backlog', color: '#64748b', icon: '📋' },
-    { id: 'todo', title: 'To Do', color: '#3b82f6', icon: '📝' },
-    { id: 'in-progress', title: 'In Progress', color: '#f59e0b', icon: '⚡' },
-    { id: 'review', title: 'In Review', color: '#8b5cf6', icon: '🔍' },
-    { id: 'done', title: 'Done', color: '#10b981', icon: '✅' },
-  ],
-  tasks: [
+export const SPACE_COLORS = [
+  '#6366f1', '#3b82f6', '#10b981', '#f59e0b',
+  '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4',
+  '#64748b', '#f97316',
+]
+
+export const COLUMN_COLORS = [
+  '#64748b', '#3b82f6', '#f59e0b', '#10b981',
+  '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4',
+  '#f97316', '#84cc16',
+]
+
+export const SPACE_ICONS  = ['🚀', '💼', '🏠', '🎯', '⚡', '🌟', '🔥', '💎', '🎨', '🧠']
+export const PROJECT_ICONS = ['📋', '📌', '📊', '🗂️', '🏗️', '🎯', '📱', '💻', '🔬', '🎭']
+
+// ── Default seed data ─────────────────────────────────────────
+export function makeSeedData(): { spaces: Space[]; projects: Project[]; columns: Column[]; tasks: Task[] } {
+  const spaceId   = crypto.randomUUID()
+  const project1  = crypto.randomUUID()
+  const project2  = crypto.randomUUID()
+
+  const col1 = crypto.randomUUID()
+  const col2 = crypto.randomUUID()
+  const col3 = crypto.randomUUID()
+  const col4 = crypto.randomUUID()
+  const col5 = crypto.randomUUID()
+  const col6 = crypto.randomUUID()
+  const col7 = crypto.randomUUID()
+  const col8 = crypto.randomUUID()
+  const now = new Date().toISOString()
+
+  const spaces: Space[] = [
+    { id: spaceId, name: 'Team Space', color: '#6366f1', icon: '🚀', description: '', position: 0, createdAt: now },
+  ]
+
+  const projects: Project[] = [
+    { id: project1, spaceId, name: 'Project 1', description: 'Main development board', color: '#6366f1', icon: '📋', status: 'active', position: 0, createdAt: now },
+    { id: project2, spaceId, name: 'Project 2', description: 'Design tasks', color: '#8b5cf6', icon: '🎨', status: 'active', position: 1, createdAt: now },
+  ]
+
+  const columns: Column[] = [
+    { id: col1, projectId: project1, name: 'To Do',       color: '#64748b', position: 0, isDone: false },
+    { id: col2, projectId: project1, name: 'In Progress', color: '#3b82f6', position: 1, isDone: false },
+    { id: col3, projectId: project1, name: 'In Review',   color: '#8b5cf6', position: 2, isDone: false },
+    { id: col4, projectId: project1, name: 'Done',        color: '#10b981', position: 3, isDone: true  },
+    { id: col5, projectId: project2, name: 'To Do',       color: '#64748b', position: 0, isDone: false },
+    { id: col6, projectId: project2, name: 'In Progress', color: '#f59e0b', position: 1, isDone: false },
+    { id: col7, projectId: project2, name: 'Review',      color: '#8b5cf6', position: 2, isDone: false },
+    { id: col8, projectId: project2, name: 'Complete',    color: '#10b981', position: 3, isDone: true  },
+  ]
+
+  const tasks: Task[] = [
     {
-      id: '1', title: 'Set up project architecture', description: 'Define folder structure, install dependencies, and configure tooling.',
-      priority: 'high', labels: ['frontend', 'devops'], dueDate: null, columnId: 'done',
-      position: 0, isCompleted: true, subtasks: [
-        { id: 's1', title: 'Create Vite config', completed: true },
-        { id: 's2', title: 'Configure TypeScript', completed: true },
+      id: crypto.randomUUID(), spaceId, projectId: project1, columnId: col1,
+      title: 'Set up project structure', description: 'Initialize the repository and set up folder structure.',
+      priority: 'high', labels: ['backend', 'devops'], dueDate: null, position: 0, isCompleted: false,
+      subtasks: [
+        { id: crypto.randomUUID(), title: 'Create repo', completed: true },
+        { id: crypto.randomUUID(), title: 'Setup CI/CD', completed: false },
       ],
-      comments: [], estimatedHours: 4, assigneeName: 'Alex', attachments: [],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      comments: [], estimatedHours: 4, assigneeName: 'Dev', attachments: [], createdAt: now, updatedAt: now,
     },
     {
-      id: '2', title: 'Design authentication flow', description: 'Create login, signup, and password reset screens with full Supabase integration.',
-      priority: 'urgent', labels: ['frontend', 'backend'], dueDate: '2026-06-15', columnId: 'done',
-      position: 0, isCompleted: false, subtasks: [
-        { id: 's3', title: 'Login page UI', completed: true },
-        { id: 's4', title: 'Supabase integration', completed: true },
+      id: crypto.randomUUID(), spaceId, projectId: project1, columnId: col1,
+      title: 'Design database schema', description: 'Plan and document the database tables.',
+      priority: 'urgent', labels: ['backend', 'docs'], dueDate: null, position: 1, isCompleted: false,
+      subtasks: [], comments: [], estimatedHours: 3, attachments: [], createdAt: now, updatedAt: now,
+    },
+    {
+      id: crypto.randomUUID(), spaceId, projectId: project1, columnId: col2,
+      title: 'Build authentication flow', description: 'Implement login, register, and session management.',
+      priority: 'urgent', labels: ['frontend', 'backend'], dueDate: null, position: 0, isCompleted: false,
+      subtasks: [
+        { id: crypto.randomUUID(), title: 'Login page', completed: true },
+        { id: crypto.randomUUID(), title: 'Register page', completed: true },
+        { id: crypto.randomUUID(), title: 'Session handling', completed: false },
       ],
-      comments: [{ id: 'c1', text: 'Looks great!', authorName: 'Sam', createdAt: new Date().toISOString() }],
-      estimatedHours: 8, assigneeName: 'Taylor', attachments: [],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    },
-    {
-      id: '3', title: 'Build Dashboard Overview', description: 'Create the main dashboard with analytics widgets and quick actions.',
-      priority: 'medium', labels: ['frontend', 'design'], dueDate: '2026-06-20', columnId: 'in-progress',
-      position: 0, isCompleted: false, subtasks: [],
-      comments: [], estimatedHours: 6, attachments: [],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    },
-    {
-      id: '4', title: 'API rate limiting', description: 'Implement proper rate limiting for all public API endpoints.',
-      priority: 'high', labels: ['backend', 'devops'], dueDate: '2026-07-01', columnId: 'todo',
-      position: 0, isCompleted: false, subtasks: [],
-      comments: [], estimatedHours: 3, attachments: [],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    },
-    {
-      id: '5', title: 'Dark / Light theme toggle', description: 'Add full theme switching support across the entire application.',
-      priority: 'low', labels: ['frontend', 'design'], dueDate: null, columnId: 'review',
-      position: 0, isCompleted: false, subtasks: [
-        { id: 's5', title: 'CSS variables', completed: true },
-        { id: 's6', title: 'Theme context', completed: true },
-        { id: 's7', title: 'Header toggle button', completed: false },
+      comments: [
+        { id: crypto.randomUUID(), text: 'Using Supabase Auth', authorName: 'Alice', createdAt: now },
       ],
-      comments: [], estimatedHours: 2, assigneeName: 'Jordan', attachments: [],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      estimatedHours: 8, attachments: [], createdAt: now, updatedAt: now,
     },
     {
-      id: '6', title: 'Write unit tests', description: 'Add comprehensive unit tests for all utility functions and hooks.',
-      priority: 'medium', labels: ['testing'], dueDate: '2026-07-10', columnId: 'backlog',
-      position: 0, isCompleted: false, subtasks: [],
-      comments: [], estimatedHours: 12, attachments: [],
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+      id: crypto.randomUUID(), spaceId, projectId: project2, columnId: col5,
+      title: 'Create wireframes', description: 'Design low-fi wireframes for main screens.',
+      priority: 'medium', labels: ['design'], dueDate: null, position: 0, isCompleted: false,
+      subtasks: [], comments: [], estimatedHours: 6, attachments: [], createdAt: now, updatedAt: now,
     },
   ]
+
+  return { spaces, projects, columns, tasks }
+}
+
+// ── localStorage ──────────────────────────────────────────────
+const LS_KEY = 'blanze_taskboard_v2'
+
+export interface PersistedBoard {
+  spaces: Space[]
+  projects: Project[]
+  columns: Column[]
+  tasks: Task[]
+  activeSpaceId: string | null
+  activeProjectId: string | null
+  view: 'kanban' | 'list'
+}
+
+export function loadBoardState(): PersistedBoard | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as PersistedBoard
+  } catch { return null }
+}
+
+export function saveBoardState(s: PersistedBoard) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(s)) } catch {}
 }

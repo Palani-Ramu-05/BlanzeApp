@@ -15,8 +15,12 @@ create table if not exists fl_workspaces (
   user_id     uuid references auth.users(id) on delete cascade not null unique,
   items       jsonb not null default '[]',
   env_vars    jsonb not null default '[]',
+  open_tabs   jsonb,           -- { openTabIds: string[], activeTabId: string | null }
   updated_at  timestamptz default now()
 );
+
+-- Add open_tabs column if upgrading from older schema
+alter table fl_workspaces add column if not exists open_tabs jsonb;
 
 -- Each history entry (method, url, status, timing) stored individually.
 create table if not exists fl_history (
@@ -52,23 +56,78 @@ create policy "fl_history: owner only"
 -- 2. TASK BOARD
 -- ================================================================
 
--- Each task row belongs to one user.
--- Column membership is stored as a text column_id (matches the
--- fixed column IDs: backlog | todo | in-progress | review | done).
--- Subtasks and comments are stored as JSONB arrays for simplicity.
+-- Spaces (top-level workspace groups, like ClickUp Spaces)
+create table if not exists tb_spaces (
+  id          uuid default gen_random_uuid() primary key,
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  name        text not null default 'My Workspace',
+  color       text not null default '#6366f1',
+  icon        text not null default '🚀',
+  description text not null default '',
+  position    integer not null default 0,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+create index if not exists tb_spaces_user_id_idx on tb_spaces(user_id);
+alter table tb_spaces enable row level security;
+create policy "tb_spaces: owner only"
+  on tb_spaces for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Projects (boards within a space)
+create table if not exists tb_projects (
+  id          uuid default gen_random_uuid() primary key,
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  space_id    uuid references tb_spaces(id) on delete cascade not null,
+  name        text not null default 'Project',
+  description text not null default '',
+  color       text not null default '#6366f1',
+  icon        text not null default '📋',
+  status      text not null default 'active',  -- active | archived
+  position    integer not null default 0,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+create index if not exists tb_projects_user_id_idx  on tb_projects(user_id);
+create index if not exists tb_projects_space_id_idx on tb_projects(space_id);
+alter table tb_projects enable row level security;
+create policy "tb_projects: owner only"
+  on tb_projects for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Columns (dynamic status columns per project)
+create table if not exists tb_columns (
+  id          uuid default gen_random_uuid() primary key,
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  project_id  uuid references tb_projects(id) on delete cascade not null,
+  name        text not null,
+  color       text not null default '#64748b',
+  position    integer not null default 0,
+  is_done     boolean not null default false,
+  created_at  timestamptz default now()
+);
+
+create index if not exists tb_columns_project_id_idx on tb_columns(project_id);
+alter table tb_columns enable row level security;
+create policy "tb_columns: owner only"
+  on tb_columns for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Tasks (belong to a project + column)
 create table if not exists tb_tasks (
   id              uuid default gen_random_uuid() primary key,
   user_id         uuid references auth.users(id) on delete cascade not null,
+  space_id        uuid references tb_spaces(id) on delete cascade,
+  project_id      uuid references tb_projects(id) on delete cascade,
+  column_id       text not null default '',   -- stores tb_columns.id (uuid as text)
   title           text not null,
   description     text not null default '',
-  priority        text not null default 'medium',   -- urgent | high | medium | low
+  priority        text not null default 'medium',
   labels          text[] default '{}',
   due_date        date,
-  column_id       text not null default 'backlog',  -- backlog | todo | in-progress | review | done
   position        integer not null default 0,
   is_completed    boolean not null default false,
-  subtasks        jsonb not null default '[]',      -- [{ id, title, completed }]
-  comments        jsonb not null default '[]',      -- [{ id, text, authorName, createdAt }]
+  subtasks        jsonb not null default '[]',
+  comments        jsonb not null default '[]',
   estimated_hours numeric,
   assignee_name   text,
   attachments     text[] default '{}',
@@ -77,15 +136,17 @@ create table if not exists tb_tasks (
 );
 
 create index if not exists tb_tasks_user_id_idx    on tb_tasks(user_id);
+create index if not exists tb_tasks_project_id_idx on tb_tasks(project_id);
 create index if not exists tb_tasks_column_id_idx  on tb_tasks(user_id, column_id);
-create index if not exists tb_tasks_position_idx   on tb_tasks(user_id, column_id, position);
+create index if not exists tb_tasks_position_idx   on tb_tasks(project_id, column_id, position);
 
 alter table tb_tasks enable row level security;
-
 create policy "tb_tasks: owner only"
-  on tb_tasks for all
-  using  (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  on tb_tasks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Migration: add new columns to existing tb_tasks rows
+alter table tb_tasks add column if not exists space_id   uuid references tb_spaces(id) on delete cascade;
+alter table tb_tasks add column if not exists project_id uuid references tb_projects(id) on delete cascade;
 
 -- Auto-update updated_at
 create or replace function set_updated_at()
@@ -127,10 +188,12 @@ create table if not exists notes (
   user_id       uuid references auth.users(id) on delete cascade not null,
   folder_id     uuid references note_folders(id) on delete set null,
   title         text not null default 'Untitled',
-  content       jsonb,                             -- TipTap JSON document
+  content       jsonb,                             -- TipTap JSON document (rich mode)
   content_text  text not null default '',          -- plain text for search
+  raw_content   text not null default '',          -- verbatim text for code/raw mode
+  note_type     text not null default 'rich',      -- 'rich' | 'code'
   icon          text not null default '📝',
-  cover_color   text not null default '#3b82f6',
+  cover_color   text not null default '',
   is_pinned     boolean not null default false,
   is_favorite   boolean not null default false,
   is_archived   boolean not null default false,
@@ -139,6 +202,10 @@ create table if not exists notes (
   created_at    timestamptz default now(),
   updated_at    timestamptz default now()
 );
+
+-- Migration: add new columns to existing notes tables
+alter table notes add column if not exists raw_content  text not null default '';
+alter table notes add column if not exists note_type    text not null default 'rich';
 
 create index if not exists notes_user_id_idx    on notes(user_id);
 create index if not exists notes_folder_id_idx  on notes(folder_id);

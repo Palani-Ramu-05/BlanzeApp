@@ -1,264 +1,308 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Calendar, MessageSquare, Plus, Trash2, CheckSquare, Square, Clock, Tag, Flag } from 'lucide-react'
-import { type Task, type Priority, PRIORITY_CONFIG, LABEL_COLORS } from '../dto/types/taskboard.types'
+import {
+  X, Trash2, Calendar, Clock, Tag, MessageSquare,
+  CheckSquare, Plus, ChevronDown, User,
+} from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
-import { updateTask, deleteTaskAsync, updateTaskAsync, toggleSubtask, addSubtask, addComment, setActiveTask } from '../store/taskboardSlice'
+import {
+  setActiveTask, updateTaskAsync, deleteTaskAsync,
+  toggleSubtask, addSubtask, addComment,
+} from '../store/taskboardSlice'
+import { PRIORITY_CONFIG, LABEL_COLORS } from '../dto/types/taskboard.types'
 import { cn } from '@utils/index'
 import { format } from 'date-fns'
 
-const ALL_LABELS = Object.keys(LABEL_COLORS)
-
-export function TaskModal({ taskId }: { taskId: string }) {
+export function TaskModal() {
   const dispatch = useAppDispatch()
-  const task = useAppSelector(s => s.taskboard.board.tasks.find(t => t.id === taskId))
-  const { user } = useAppSelector(s => s.auth)
+  const { activeTaskId, tasks, columns, projects, spaces } = useAppSelector(s => s.taskboard)
+  const task = tasks.find(t => t.id === activeTaskId)
 
-  const [editTitle, setEditTitle] = useState(task?.title ?? '')
-  const [editDesc, setEditDesc] = useState(task?.description ?? '')
+  const [title, setTitle]           = useState('')
+  const [description, setDesc]      = useState('')
+  const [assignee, setAssignee]     = useState('')
   const [newSubtask, setNewSubtask] = useState('')
   const [newComment, setNewComment] = useState('')
-  const [editingTitle, setEditingTitle] = useState(false)
 
   useEffect(() => {
-    if (task) { setEditTitle(task.title); setEditDesc(task.description) }
-  }, [task])
+    if (task) { setTitle(task.title); setDesc(task.description); setAssignee(task.assigneeName ?? '') }
+  }, [task?.id])
 
   if (!task) return null
 
-  const close = () => dispatch(setActiveTask(null))
+  const column  = columns.find(c => c.id === task.columnId)
+  const project = projects.find(p => p.id === task.projectId)
+  const space   = spaces.find(s => s.id === task.spaceId)
+  const pc      = PRIORITY_CONFIG[task.priority]
 
-  const save = () => {
-    dispatch(updateTaskAsync({ id: task.id, changes: { title: editTitle, description: editDesc } }))
-    setEditingTitle(false)
-  }
-
-  const setPriority = (p: Priority) => dispatch(updateTaskAsync({ id: task.id, changes: { priority: p } }))
-
-  const toggleLabel = (label: string) => {
-    const labels = task.labels.includes(label)
-      ? task.labels.filter(l => l !== label)
-      : [...task.labels, label]
-    dispatch(updateTaskAsync({ id: task.id, changes: { labels } }))
+  const save = (changes: Partial<typeof task>) => {
+    dispatch(updateTaskAsync({ id: task.id, changes }))
   }
 
   const handleAddSubtask = () => {
     if (!newSubtask.trim()) return
-    dispatch(addSubtask({ taskId: task.id, title: newSubtask }))
+    dispatch(addSubtask({ taskId: task.id, title: newSubtask.trim() }))
     setNewSubtask('')
   }
 
   const handleAddComment = () => {
     if (!newComment.trim()) return
-    dispatch(addComment({ taskId: task.id, text: newComment, authorName: user?.name ?? 'You' }))
+    dispatch(addComment({ taskId: task.id, text: newComment.trim(), authorName: task.assigneeName ?? 'Me' }))
     setNewComment('')
   }
 
   const handleDelete = () => {
     dispatch(deleteTaskAsync(task.id))
-    close()
+    dispatch(setActiveTask(null))
   }
 
-  const completedSubtasks = task.subtasks.filter(s => s.completed).length
-  const priority = PRIORITY_CONFIG[task.priority]
+  const completedSubs = task.subtasks.filter(s => s.completed).length
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        onClick={e => { if (e.target === e.currentTarget) close() }}
-      >
+      <div className="fixed inset-0 z-50 flex items-start justify-end" onClick={() => dispatch(setActiveTask(null))}>
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          className="bg-surface-900 border border-surface-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-          style={{ boxShadow: 'var(--shadow-elevated)' }}
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 35 }}
+          onClick={e => e.stopPropagation()}
+          className="relative z-10 w-full max-w-xl h-full bg-surface-900 border-l border-surface-700/60 flex flex-col shadow-2xl overflow-hidden"
         >
           {/* Header */}
-          <div className="sticky top-0 flex items-start justify-between p-5 border-b border-surface-700 bg-surface-900 z-10">
-            <div className="flex-1 pr-4">
-              {editingTitle ? (
-                <input
-                  autoFocus value={editTitle}
-                  onChange={e => setEditTitle(e.target.value)}
-                  onBlur={save}
-                  onKeyDown={e => e.key === 'Enter' && save()}
-                  className="w-full text-xl font-bold bg-transparent border-b border-brand-500 outline-none pb-1"
-                  style={{ color: 'rgb(var(--color-text-primary))' }}
-                />
-              ) : (
-                <h2 className="text-xl font-bold cursor-pointer hover:text-brand-400 transition-colors"
-                  onClick={() => setEditingTitle(true)}
-                  style={{ color: 'rgb(var(--color-text-primary))' }}>
-                  {task.title}
-                </h2>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-surface-700/50 flex-shrink-0">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-1.5 text-[10px] text-surface-500 min-w-0">
+              <span>{space?.icon}</span>
+              <span className="truncate">{space?.name}</span>
+              <span>/</span>
+              <span style={{ color: project?.color ?? undefined }}>{project?.icon} {project?.name}</span>
+              {column && (
+                <>
+                  <span>/</span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: column.color }} />
+                    {column.name}
+                  </span>
+                </>
               )}
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-1 flex-shrink-0 ml-2">
               <button onClick={handleDelete}
-                className="w-8 h-8 rounded-lg bg-red-600/10 border border-red-600/20 text-red-400 hover:bg-red-600/20 transition-all flex items-center justify-center">
-                <Trash2 size={14} />
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-surface-500 hover:text-red-400 hover:bg-red-600/10 transition-all">
+                <Trash2 size={13} />
               </button>
-              <button onClick={close}
-                className="w-8 h-8 rounded-lg bg-surface-800 border border-surface-700 text-surface-400 hover:text-white transition-all flex items-center justify-center">
+              <button onClick={() => dispatch(setActiveTask(null))}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-surface-500 hover:text-white hover:bg-surface-700 transition-all">
                 <X size={14} />
               </button>
             </div>
           </div>
 
-          <div className="p-5 flex flex-col gap-6">
-            {/* Meta row */}
-            <div className="flex flex-wrap gap-3">
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto no-scrollbar px-5 py-4 space-y-5">
+            {/* Title */}
+            <textarea
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              onBlur={() => title.trim() && save({ title: title.trim() })}
+              className="w-full bg-transparent text-xl font-bold text-white outline-none resize-none leading-snug placeholder:text-surface-600"
+              rows={2}
+              placeholder="Task title"
+            />
+
+            {/* Meta grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Status */}
+              <div className="bg-surface-800/50 border border-surface-700/40 rounded-lg p-2">
+                <p className="text-[9px] text-surface-600 uppercase tracking-wider mb-1">Status</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: column?.color ?? '#64748b' }} />
+                  <span className="text-xs text-slate-200 font-medium">{column?.name ?? '—'}</span>
+                </div>
+              </div>
+
               {/* Priority */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-surface-500 flex items-center gap-1"><Flag size={11} /> Priority</span>
-                <div className="flex gap-1.5">
-                  {(Object.keys(PRIORITY_CONFIG) as Priority[]).map(p => (
-                    <button key={p} onClick={() => setPriority(p)}
-                      className={cn(
-                        'text-xs font-bold px-2.5 py-1 rounded-lg border transition-all',
-                        task.priority === p ? `${PRIORITY_CONFIG[p].bg} ${PRIORITY_CONFIG[p].border}` : 'bg-surface-800 border-surface-700 text-surface-400 hover:text-white'
-                      )}
-                      style={{ color: task.priority === p ? PRIORITY_CONFIG[p].color : undefined }}>
-                      {PRIORITY_CONFIG[p].label}
-                    </button>
-                  ))}
+              <div className="bg-surface-800/50 border border-surface-700/40 rounded-lg p-2">
+                <p className="text-[9px] text-surface-600 uppercase tracking-wider mb-1">Priority</p>
+                <div className="relative">
+                  <select
+                    value={task.priority}
+                    onChange={e => save({ priority: e.target.value as typeof task.priority })}
+                    className={cn('w-full bg-transparent text-xs font-semibold appearance-none outline-none cursor-pointer pr-4', pc.color === '#ef4444' ? 'text-red-400' : pc.color === '#f59e0b' ? 'text-amber-400' : pc.color === '#3b82f6' ? 'text-blue-400' : 'text-emerald-400')}
+                  >
+                    <option value="urgent">🔴 Urgent</option>
+                    <option value="high">🟠 High</option>
+                    <option value="medium">🔵 Medium</option>
+                    <option value="low">🟢 Low</option>
+                  </select>
+                  <ChevronDown size={10} className="absolute right-0 top-1/2 -translate-y-1/2 text-surface-500 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Assignee */}
+              <div className="bg-surface-800/50 border border-surface-700/40 rounded-lg p-2">
+                <p className="text-[9px] text-surface-600 uppercase tracking-wider mb-1">Assignee</p>
+                <div className="flex items-center gap-1.5">
+                  <User size={12} className="text-surface-500 flex-shrink-0" />
+                  <input
+                    value={assignee}
+                    onChange={e => setAssignee(e.target.value)}
+                    onBlur={() => save({ assigneeName: assignee || undefined })}
+                    placeholder="Unassigned"
+                    className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-surface-600 outline-none min-w-0"
+                  />
                 </div>
               </div>
 
               {/* Due date */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-surface-500 flex items-center gap-1"><Calendar size={11} /> Due Date</span>
-                <input type="date"
+              <div className="bg-surface-800/50 border border-surface-700/40 rounded-lg p-2">
+                <p className="text-[9px] text-surface-600 uppercase tracking-wider mb-1">Due Date</p>
+                <input
+                  type="date"
                   value={task.dueDate ?? ''}
-                  onChange={e => dispatch(updateTaskAsync({ id: task.id, changes: { dueDate: e.target.value || null } }))}
-                  className="input-base text-xs py-1.5 w-36" />
+                  onChange={e => save({ dueDate: e.target.value || null })}
+                  className="bg-transparent text-xs text-slate-300 outline-none cursor-pointer w-full"
+                />
               </div>
 
-              {/* Assignee */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-surface-500 flex items-center gap-1"><Clock size={11} /> Est. Hours</span>
-                <input type="number" min={0}
-                  value={task.estimatedHours ?? ''}
-                  onChange={e => dispatch(updateTaskAsync({ id: task.id, changes: { estimatedHours: Number(e.target.value) } }))}
-                  className="input-base text-xs py-1.5 w-20" placeholder="0" />
+              {/* Est. hours */}
+              <div className="bg-surface-800/50 border border-surface-700/40 rounded-lg p-2">
+                <p className="text-[9px] text-surface-600 uppercase tracking-wider mb-1">Est. Hours</p>
+                <div className="flex items-center gap-1">
+                  <Clock size={11} className="text-surface-500" />
+                  <input type="number" min={0} step={0.5}
+                    value={task.estimatedHours ?? ''}
+                    onChange={e => save({ estimatedHours: e.target.value ? Number(e.target.value) : undefined })}
+                    className="bg-transparent text-xs text-slate-300 outline-none w-full" placeholder="—" />
+                </div>
               </div>
             </div>
 
             {/* Labels */}
             <div>
-              <span className="text-xs font-semibold text-surface-500 flex items-center gap-1 mb-2"><Tag size={11} /> Labels</span>
-              <div className="flex gap-1.5 flex-wrap">
-                {ALL_LABELS.map(label => (
-                  <button key={label} onClick={() => toggleLabel(label)}
-                    className={cn(
-                      'text-xs font-semibold px-2.5 py-1 rounded-full capitalize transition-all border',
-                      task.labels.includes(label) ? 'opacity-100' : 'opacity-40 hover:opacity-70'
-                    )}
-                    style={{
-                      backgroundColor: `${LABEL_COLORS[label]}20`,
-                      color: LABEL_COLORS[label],
-                      borderColor: `${LABEL_COLORS[label]}50`,
-                    }}>
-                    {label}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2 mb-2">
+                <Tag size={12} className="text-surface-500" />
+                <span className="text-xs font-semibold text-surface-400">Labels</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(LABEL_COLORS).map(([label, color]) => {
+                  const active = task.labels.includes(label)
+                  return (
+                    <button key={label}
+                      onClick={() => save({ labels: active ? task.labels.filter(l => l !== label) : [...task.labels, label] })}
+                      className={cn('text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all',
+                        active ? 'opacity-100' : 'opacity-40 hover:opacity-70')}
+                      style={{ color, borderColor: `${color}44`, backgroundColor: `${color}22` }}>
+                      {label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <span className="text-xs font-semibold text-surface-500 block mb-2">Description</span>
+              <p className="text-xs font-semibold text-surface-400 mb-2">Description</p>
               <textarea
-                value={editDesc}
-                onChange={e => setEditDesc(e.target.value)}
-                onBlur={save}
+                value={description}
+                onChange={e => setDesc(e.target.value)}
+                onBlur={() => save({ description })}
+                placeholder="Add a description…"
                 rows={4}
-                placeholder="Add a description..."
-                className="input-base text-sm resize-none leading-relaxed"
+                className="w-full bg-surface-800/50 border border-surface-700/40 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors resize-none"
               />
             </div>
 
             {/* Subtasks */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-surface-500 flex items-center gap-1">
-                  <CheckSquare size={11} /> Subtasks
-                  {task.subtasks.length > 0 && (
-                    <span className="text-surface-600 font-normal">({completedSubtasks}/{task.subtasks.length})</span>
-                  )}
+              <div className="flex items-center gap-2 mb-2">
+                <CheckSquare size={12} className="text-surface-500" />
+                <span className="text-xs font-semibold text-surface-400">
+                  Subtasks {task.subtasks.length > 0 && `(${completedSubs}/${task.subtasks.length})`}
                 </span>
               </div>
+
               {task.subtasks.length > 0 && (
-                <div className="h-1 bg-surface-700 rounded-full overflow-hidden mb-3">
-                  <motion.div className="h-full bg-emerald-500 rounded-full"
-                    animate={{ width: `${(completedSubtasks / task.subtasks.length) * 100}%` }} />
+                <div className="mb-2">
+                  <div className="h-1 bg-surface-700 rounded-full mb-2">
+                    <div className="h-full bg-brand-500 rounded-full transition-all" style={{ width: `${(completedSubs / task.subtasks.length) * 100}%` }} />
+                  </div>
+                  <div className="space-y-1.5">
+                    {task.subtasks.map(st => (
+                      <label key={st.id} className="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" checked={st.completed}
+                          onChange={() => dispatch(toggleSubtask({ taskId: task.id, subtaskId: st.id }))}
+                          className="w-3.5 h-3.5 rounded border-surface-600 bg-surface-800 text-brand-500 cursor-pointer accent-brand-500" />
+                        <span className={cn('text-xs flex-1', st.completed ? 'line-through text-surface-600' : 'text-slate-300')}>
+                          {st.title}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
-              <div className="flex flex-col gap-1.5 mb-2">
-                {task.subtasks.map(st => (
-                  <div key={st.id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface-800/50 transition-all group">
-                    <button onClick={() => dispatch(toggleSubtask({ taskId: task.id, subtaskId: st.id }))}
-                      className="flex-shrink-0 transition-colors">
-                      {st.completed
-                        ? <CheckSquare size={16} className="text-emerald-400" />
-                        : <Square size={16} className="text-surface-500" />}
-                    </button>
-                    <span className={cn('text-sm flex-1', st.completed ? 'line-through text-surface-500' : '')}
-                      style={{ color: st.completed ? undefined : 'rgb(var(--color-text-primary))' }}>
-                      {st.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
+
+              <div className="flex items-center gap-1.5">
                 <input value={newSubtask} onChange={e => setNewSubtask(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddSubtask()}
-                  placeholder="Add subtask..." className="input-base text-xs py-1.5 flex-1" />
-                <button onClick={handleAddSubtask} className="btn-primary py-1.5 px-3 text-xs">
-                  <Plus size={14} />
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddSubtask() }}
+                  placeholder="Add subtask…"
+                  className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors" />
+                <button onClick={handleAddSubtask}
+                  className="w-7 h-7 rounded-lg bg-surface-700 hover:bg-brand-600 flex items-center justify-center text-surface-400 hover:text-white transition-all">
+                  <Plus size={12} />
                 </button>
               </div>
             </div>
 
             {/* Comments */}
             <div>
-              <span className="text-xs font-semibold text-surface-500 flex items-center gap-1 mb-3">
-                <MessageSquare size={11} /> Comments ({task.comments.length})
-              </span>
-              <div className="flex flex-col gap-2.5 mb-3">
-                {task.comments.map(c => (
-                  <div key={c.id} className="flex gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white">
-                      {c.authorName[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold" style={{ color: 'rgb(var(--color-text-primary))' }}>{c.authorName}</span>
-                        <span className="text-[10px] text-surface-500">{format(new Date(c.createdAt), 'MMM d, HH:mm')}</span>
-                      </div>
-                      <p className="text-sm text-surface-300 bg-surface-800 rounded-xl px-3 py-2 leading-relaxed">{c.text}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare size={12} className="text-surface-500" />
+                <span className="text-xs font-semibold text-surface-400">Comments ({task.comments.length})</span>
               </div>
-              <div className="flex gap-2">
+
+              {task.comments.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {task.comments.map(c => (
+                    <div key={c.id} className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-brand-600/20 border border-brand-600/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-[8px] font-bold text-brand-400">{c.authorName.slice(0, 2).toUpperCase()}</span>
+                      </div>
+                      <div className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-semibold text-slate-300">{c.authorName}</span>
+                          <span className="text-[10px] text-surface-600">{format(new Date(c.createdAt), 'MMM d, HH:mm')}</span>
+                        </div>
+                        <p className="text-xs text-slate-300">{c.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center gap-1.5">
                 <input value={newComment} onChange={e => setNewComment(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddComment()}
-                  placeholder="Add a comment..." className="input-base text-sm flex-1" />
-                <button onClick={handleAddComment} className="btn-primary py-2 px-3 text-sm">
-                  <MessageSquare size={14} />
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddComment() }}
+                  placeholder="Write a comment…"
+                  className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors" />
+                <button onClick={handleAddComment}
+                  className="w-7 h-7 rounded-lg bg-surface-700 hover:bg-brand-600 flex items-center justify-center text-surface-400 hover:text-white transition-all">
+                  <Plus size={12} />
                 </button>
               </div>
             </div>
+
+            {/* Footer meta */}
+            <div className="text-[10px] text-surface-700 space-y-0.5">
+              <p>Created {format(new Date(task.createdAt), 'MMMM d, yyyy')}</p>
+              <p>Updated {format(new Date(task.updatedAt), 'MMM d, yyyy · HH:mm')}</p>
+            </div>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
     </AnimatePresence>
   )
 }

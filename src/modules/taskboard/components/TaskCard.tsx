@@ -1,132 +1,106 @@
-import { motion } from 'framer-motion'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Calendar, MessageSquare, Paperclip, CheckSquare, GripVertical, User } from 'lucide-react'
-import { type Task, PRIORITY_CONFIG, LABEL_COLORS } from '../dto/types/taskboard.types'
+import { MessageSquare, Paperclip, Calendar, CheckSquare, AlertCircle } from 'lucide-react'
 import { cn } from '@utils/index'
-import { format } from 'date-fns'
+import { PRIORITY_CONFIG, LABEL_COLORS } from '../dto/types/taskboard.types'
+import type { Task } from '../dto/types/taskboard.types'
+import { format, isPast, parseISO } from 'date-fns'
 
-interface TaskCardProps {
-  task: Task
-  onClick: () => void
-  isDragging?: boolean
-}
+interface Props { task: Task; onClick: () => void; isDragging?: boolean }
 
-export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging: isSortDragging } =
-    useSortable({ id: task.id })
+export function TaskCard({ task, onClick, isDragging }: Props) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging: isSortableDragging } = useSortable({ id: task.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isSortableDragging ? 0.4 : 1,
   }
 
-  const priority = PRIORITY_CONFIG[task.priority]
+  const pc = PRIORITY_CONFIG[task.priority]
   const completedSubtasks = task.subtasks.filter(s => s.completed).length
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !task.isCompleted
+  const isOverdue = task.dueDate && isPast(parseISO(task.dueDate)) && !task.isCompleted
+  const initials = task.assigneeName ? task.assigneeName.slice(0, 2).toUpperCase() : null
 
   return (
-    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, boxShadow: 'var(--shadow-card)' }}
-      className={cn(
-        'group relative bg-surface-900 border border-surface-700 rounded-xl p-3 cursor-pointer transition-all',
-        isSortDragging || isDragging ? 'opacity-50 shadow-2xl scale-105' : 'hover:border-surface-600',
-      )}
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
       onClick={onClick}
+      className={cn(
+        'group bg-surface-800 border border-surface-700/60 rounded-xl p-3 cursor-pointer',
+        'hover:border-brand-600/40 hover:shadow-md transition-all select-none',
+        isDragging && 'shadow-2xl rotate-1 scale-105 border-brand-500/50',
+        task.isCompleted && 'opacity-60',
+      )}
     >
-      {/* Drag handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-3 right-3 opacity-0 group-hover:opacity-60 hover:!opacity-100 text-surface-500 cursor-grab active:cursor-grabbing transition-opacity"
-        onClick={e => e.stopPropagation()}
-      >
-        <GripVertical size={14} />
-      </div>
-
-      {/* Priority indicator */}
-      <div className="flex items-start gap-2 mb-2.5">
-        <div className="w-1.5 h-full min-h-[36px] rounded-full flex-shrink-0 mt-0.5"
-          style={{ backgroundColor: priority.color }} />
-        <div className="flex-1 min-w-0">
-          <p className={cn(
-            'text-sm font-semibold leading-snug pr-6',
-            task.isCompleted ? 'line-through text-surface-400' : ''
-          )} style={{ color: task.isCompleted ? undefined : 'rgb(var(--color-text-primary))' }}>
-            {task.title}
-          </p>
-          {task.description && (
-            <p className="text-xs text-surface-400 mt-1 line-clamp-2 leading-relaxed">{task.description}</p>
-          )}
-        </div>
-      </div>
-
       {/* Labels */}
       {task.labels.length > 0 && (
-        <div className="flex gap-1.5 flex-wrap mb-2.5">
+        <div className="flex flex-wrap gap-1 mb-2">
           {task.labels.map(label => (
-            <span key={label} className="text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize"
-              style={{
-                backgroundColor: `${LABEL_COLORS[label] ?? '#64748b'}20`,
-                color: LABEL_COLORS[label] ?? '#94a3b8',
-                border: `1px solid ${LABEL_COLORS[label] ?? '#64748b'}40`,
-              }}>
+            <span key={label}
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide"
+              style={{ backgroundColor: `${LABEL_COLORS[label] ?? '#64748b'}22`, color: LABEL_COLORS[label] ?? '#64748b', border: `1px solid ${LABEL_COLORS[label] ?? '#64748b'}44` }}>
               {label}
             </span>
           ))}
         </div>
       )}
 
-      {/* Subtask progress */}
+      {/* Title */}
+      <p className={cn('text-sm font-medium text-slate-200 leading-snug mb-2', task.isCompleted && 'line-through text-surface-500')}>
+        {task.title}
+      </p>
+
+      {/* Subtasks progress */}
       {task.subtasks.length > 0 && (
-        <div className="mb-2.5">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-surface-500 flex items-center gap-1">
-              <CheckSquare size={10} /> {completedSubtasks}/{task.subtasks.length}
-            </span>
+        <div className="mb-2">
+          <div className="flex items-center gap-1.5 mb-1">
+            <CheckSquare size={10} className="text-surface-500" />
+            <span className="text-[10px] text-surface-500">{completedSubtasks}/{task.subtasks.length}</span>
           </div>
           <div className="h-1 bg-surface-700 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-emerald-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${(completedSubtasks / task.subtasks.length) * 100}%` }}
-              transition={{ duration: 0.5 }}
-            />
+            <div className="h-full bg-brand-500 rounded-full transition-all"
+              style={{ width: `${(completedSubtasks / task.subtasks.length) * 100}%` }} />
           </div>
         </div>
       )}
 
-      {/* Footer meta */}
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex items-center gap-2.5 text-surface-500">
-          {task.dueDate && (
-            <span className={cn(
-              'text-[10px] flex items-center gap-1 font-medium',
-              isOverdue ? 'text-red-400' : 'text-surface-400'
-            )}>
-              <Calendar size={10} />
-              {format(new Date(task.dueDate), 'MMM d')}
-            </span>
-          )}
+      {/* Footer */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Priority */}
+        <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border', pc.bg, pc.border)}
+          style={{ color: pc.color }}>
+          {pc.label}
+        </span>
+
+        {/* Due date */}
+        {task.dueDate && (
+          <span className={cn('flex items-center gap-0.5 text-[10px]', isOverdue ? 'text-red-400' : 'text-surface-500')}>
+            {isOverdue && <AlertCircle size={9} />}
+            <Calendar size={9} />
+            {format(parseISO(task.dueDate), 'MMM d')}
+          </span>
+        )}
+
+        <div className="flex items-center gap-2 ml-auto">
           {task.comments.length > 0 && (
-            <span className="text-[10px] flex items-center gap-1">
-              <MessageSquare size={10} /> {task.comments.length}
+            <span className="flex items-center gap-0.5 text-[10px] text-surface-600">
+              <MessageSquare size={9} />{task.comments.length}
             </span>
           )}
           {task.attachments.length > 0 && (
-            <span className="text-[10px] flex items-center gap-1">
-              <Paperclip size={10} /> {task.attachments.length}
+            <span className="flex items-center gap-0.5 text-[10px] text-surface-600">
+              <Paperclip size={9} />{task.attachments.length}
             </span>
           )}
-        </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-md', priority.bg, priority.border, 'border')}>
-            {priority.label}
-          </span>
-          {task.assigneeName && (
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white"
-              title={task.assigneeName}>
-              {task.assigneeName[0].toUpperCase()}
+          {/* Assignee avatar */}
+          {initials && (
+            <div className="w-5 h-5 rounded-full bg-brand-600/30 border border-brand-600/40 flex items-center justify-center flex-shrink-0">
+              <span className="text-[8px] font-bold text-brand-400">{initials}</span>
             </div>
           )}
         </div>

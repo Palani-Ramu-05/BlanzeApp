@@ -1,139 +1,249 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { Plus, MoreHorizontal, Pencil, Trash2, Check, X, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, MoreHorizontal } from 'lucide-react'
-import { type Column, type Task } from '../dto/types/taskboard.types'
+import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
+import {
+  addTaskAsync, updateColumnAsync, deleteColumnAsync, setActiveTask,
+} from '../store/taskboardSlice'
 import { TaskCard } from './TaskCard'
 import { cn } from '@utils/index'
-import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
-import { addTaskAsync, setActiveTask } from '../store/taskboardSlice'
+import type { Column, Task } from '../dto/types/taskboard.types'
+import { COLUMN_COLORS } from '../dto/types/taskboard.types'
 
-interface KanbanColumnProps {
+interface Props {
   column: Column
   tasks: Task[]
-  isOver?: boolean
+  projectId: string
+  spaceId: string
 }
 
-export function KanbanColumn({ column, tasks, isOver }: KanbanColumnProps) {
+export function KanbanColumn({ column, tasks, projectId, spaceId }: Props) {
   const dispatch = useAppDispatch()
-  const { user } = useAppSelector(s => s.auth)
-  const [showQuickAdd, setShowQuickAdd] = useState(false)
-  const [quickTitle, setQuickTitle] = useState('')
+  const { columns } = useAppSelector(s => s.taskboard)
+  const { setNodeRef, isOver } = useDroppable({ id: column.id })
 
-  const { setNodeRef } = useDroppable({ id: column.id })
+  const projectColumns = [...columns.filter(c => c.projectId === projectId)].sort((a, b) => a.position - b.position)
+  const colIndex       = projectColumns.findIndex(c => c.id === column.id)
 
-  const handleQuickAdd = () => {
-    if (!quickTitle.trim()) return
-    dispatch(addTaskAsync({
-      title: quickTitle.trim(),
-      description: '',
-      priority: 'medium',
-      labels: [],
-      dueDate: null,
-      columnId: column.id,
-      position: tasks.length,
-      isCompleted: column.id === 'done',
-      subtasks: [],
-      comments: [],
-      attachments: [],
-      assigneeName: user?.name,
-    }))
-    setQuickTitle('')
-    setShowQuickAdd(false)
+  const moveColumnLeft = () => {
+    if (colIndex <= 0) return
+    const prev = projectColumns[colIndex - 1]
+    dispatch(updateColumnAsync({ id: column.id, changes: { position: prev.position } }))
+    dispatch(updateColumnAsync({ id: prev.id, changes: { position: column.position } }))
+  }
+  const moveColumnRight = () => {
+    if (colIndex >= projectColumns.length - 1) return
+    const next = projectColumns[colIndex + 1]
+    dispatch(updateColumnAsync({ id: column.id, changes: { position: next.position } }))
+    dispatch(updateColumnAsync({ id: next.id, changes: { position: column.position } }))
   }
 
+  const [showMenu, setShowMenu]     = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameVal, setNameVal]       = useState(column.name)
+  const [addingTask, setAddingTask] = useState(false)
+  const [taskTitle, setTaskTitle]   = useState('')
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const completedCount = tasks.filter(t => t.isCompleted).length
+
+  const handleRename = () => {
+    if (nameVal.trim() && nameVal !== column.name) {
+      dispatch(updateColumnAsync({ id: column.id, changes: { name: nameVal.trim() } }))
+    }
+    setEditingName(false)
+    setShowMenu(false)
+  }
+
+  const handleColorChange = (color: string) => {
+    dispatch(updateColumnAsync({ id: column.id, changes: { color } }))
+    setShowColorPicker(false)
+    setShowMenu(false)
+  }
+
+  const handleToggleDone = () => {
+    dispatch(updateColumnAsync({ id: column.id, changes: { isDone: !column.isDone } }))
+    setShowMenu(false)
+  }
+
+  const handleDeleteColumn = () => {
+    dispatch(deleteColumnAsync(column.id))
+    setShowMenu(false)
+  }
+
+  const handleAddTask = async () => {
+    if (!taskTitle.trim()) { setAddingTask(false); return }
+    await dispatch(addTaskAsync({ title: taskTitle.trim(), columnId: column.id, projectId, spaceId }))
+    setTaskTitle('')
+    setAddingTask(false)
+  }
+
+  const handleAddKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleAddTask()
+    if (e.key === 'Escape') { setAddingTask(false); setTaskTitle('') }
+  }
+
+  const sortedTasks = [...tasks].sort((a, b) => a.position - b.position)
+
   return (
-    <div
-      className={cn(
-        'flex flex-col rounded-2xl border transition-all min-w-[280px] flex-shrink-0 lg:flex-1',
-        isOver ? 'border-brand-500/60 bg-brand-600/5' : 'border-surface-700/60 bg-surface-800/30'
-      )}
-      style={{ boxShadow: 'var(--shadow-card)', maxHeight: 'calc(100vh - 260px)', minHeight: '320px' }}
-    >
-      {/* Column header */}
-      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-base leading-none">{column.icon}</span>
-          <span className="text-sm font-semibold" style={{ color: 'rgb(var(--color-text-primary))' }}>{column.title}</span>
-          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-surface-700 text-surface-400 min-w-[20px] text-center">
-            {tasks.length}
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setShowQuickAdd(v => !v)}
-            className="w-6 h-6 rounded-md text-surface-400 hover:text-white hover:bg-surface-700 transition-all flex items-center justify-center">
-            <Plus size={14} />
+    <div className="flex-shrink-0 flex flex-col w-[272px] max-h-full">
+      {/* ── Column header ── */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-t-xl bg-surface-800/40 border border-surface-700/50 border-b-0">
+        {/* Status dot */}
+        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: column.color }} />
+
+        {/* Title */}
+        {editingName ? (
+          <input autoFocus value={nameVal} onChange={e => setNameVal(e.target.value)}
+            onBlur={handleRename}
+            onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') { setNameVal(column.name); setEditingName(false) } }}
+            className="flex-1 bg-transparent text-xs font-semibold text-white outline-none border-b border-brand-500" />
+        ) : (
+          <span className="flex-1 text-xs font-semibold text-slate-200 truncate uppercase tracking-wide">{column.name}</span>
+        )}
+
+        {/* Task count */}
+        <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0',
+          column.isDone ? 'bg-green-500/15 text-green-400' : 'bg-surface-700 text-surface-400')}>
+          {tasks.length}
+        </span>
+
+        {/* Done indicator */}
+        {column.isDone && <CheckCircle2 size={12} className="text-green-400 flex-shrink-0" />}
+
+        {/* Column menu */}
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={() => setShowMenu(v => !v)}
+            className="w-5 h-5 rounded flex items-center justify-center text-surface-600 hover:text-white hover:bg-surface-700 transition-colors">
+            <MoreHorizontal size={12} />
           </button>
-          <button className="w-6 h-6 rounded-md text-surface-500 hover:text-white hover:bg-surface-700 transition-all flex items-center justify-center">
-            <MoreHorizontal size={14} />
-          </button>
+          <AnimatePresence>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => { setShowMenu(false); setShowColorPicker(false) }} />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="absolute right-0 top-6 bg-surface-800 border border-surface-700 rounded-xl shadow-2xl py-1.5 z-50 min-w-[160px]"
+                >
+                  <button onClick={() => { setEditingName(true); setShowMenu(false) }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-surface-300 hover:bg-surface-700 hover:text-white transition-colors">
+                    <Pencil size={11} /> Rename
+                  </button>
+                  <div className="flex gap-1 px-3 py-1.5">
+                    <button onClick={() => { moveColumnLeft(); setShowMenu(false) }} disabled={colIndex <= 0}
+                      className="flex-1 flex items-center justify-center gap-1 text-[10px] text-surface-400 hover:text-white hover:bg-surface-700 rounded-lg py-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                      <ChevronLeft size={11} /> Move left
+                    </button>
+                    <button onClick={() => { moveColumnRight(); setShowMenu(false) }} disabled={colIndex >= projectColumns.length - 1}
+                      className="flex-1 flex items-center justify-center gap-1 text-[10px] text-surface-400 hover:text-white hover:bg-surface-700 rounded-lg py-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                      Move right <ChevronRight size={11} />
+                    </button>
+                  </div>
+                  <button onClick={() => setShowColorPicker(v => !v)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-surface-300 hover:bg-surface-700 hover:text-white transition-colors">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: column.color }} /> Change Color
+                  </button>
+                  {showColorPicker && (
+                    <div className="px-3 py-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {COLUMN_COLORS.map(c => (
+                          <button key={c} onClick={() => handleColorChange(c)}
+                            className={cn('w-4 h-4 rounded-full transition-transform hover:scale-110', column.color === c && 'ring-2 ring-white ring-offset-1 ring-offset-surface-800')}
+                            style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <button onClick={handleToggleDone}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-surface-300 hover:bg-surface-700 hover:text-white transition-colors">
+                    <CheckCircle2 size={11} /> {column.isDone ? 'Unmark as Done' : 'Mark as Done status'}
+                  </button>
+                  <div className="h-px bg-surface-700 my-1" />
+                  <button onClick={handleDeleteColumn}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-surface-400 hover:bg-red-500/10 hover:text-red-400 transition-colors">
+                    <Trash2 size={11} /> Delete Column
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Column color bar */}
-      <div className="h-0.5 mx-4 rounded-full mb-3" style={{ backgroundColor: column.color }} />
-
-      {/* Quick add */}
-      <AnimatePresence>
-        {showQuickAdd && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden px-3 mb-2"
-          >
-            <div className="bg-surface-900 border border-surface-700 rounded-xl p-2.5 flex flex-col gap-2">
-              <input
-                autoFocus
-                value={quickTitle}
-                onChange={e => setQuickTitle(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleQuickAdd()
-                  if (e.key === 'Escape') setShowQuickAdd(false)
-                }}
-                placeholder="Task title..."
-                className="input-base text-xs py-1.5"
-              />
-              <div className="flex gap-1.5">
-                <button onClick={handleQuickAdd} className="btn-primary py-1 px-3 text-xs flex-1">Add</button>
-                <button onClick={() => setShowQuickAdd(false)} className="btn-ghost py-1 px-2 text-xs">✕</button>
-              </div>
-            </div>
-          </motion.div>
+      {/* ── Cards area (scrollable) ── */}
+      <div
+        ref={setNodeRef}
+        className={cn(
+          'flex-1 overflow-y-auto no-scrollbar min-h-[80px] px-1.5 py-1.5 bg-surface-800/20 border-x border-surface-700/50 transition-colors',
+          isOver && 'bg-brand-600/5',
         )}
-      </AnimatePresence>
-
-      {/* Tasks drop zone */}
-      <div ref={setNodeRef} className="flex-1 flex flex-col gap-2 px-3 pb-3 overflow-y-auto no-scrollbar min-h-[120px]">
-        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-          <AnimatePresence initial={false}>
-            {tasks.map((task, i) => (
-              <motion.div
+      >
+        <SortableContext items={sortedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-1.5">
+            {sortedTasks.map(task => (
+              <TaskCard
                 key={task.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: i * 0.04 }}
-              >
-                <TaskCard
-                  task={task}
-                  onClick={() => dispatch(setActiveTask(task.id))}
-                />
-              </motion.div>
+                task={task}
+                onClick={() => dispatch(setActiveTask(task.id))}
+              />
             ))}
-          </AnimatePresence>
+          </div>
         </SortableContext>
 
-        {tasks.length === 0 && !showQuickAdd && (
-          <button
-            onClick={() => setShowQuickAdd(true)}
-            className="flex flex-col items-center justify-center py-8 rounded-xl border-2 border-dashed border-surface-700/50 text-surface-500 hover:border-surface-600 hover:text-surface-400 transition-all text-xs gap-1.5"
-          >
-            <Plus size={18} />
-            <span>Add task</span>
-          </button>
+        {tasks.length === 0 && !addingTask && (
+          <div className="flex items-center justify-center h-20 text-[10px] text-surface-700 text-center">
+            Drop tasks here
+          </div>
         )}
+      </div>
+
+      {/* ── Add task (bottom) ── */}
+      <div className="border border-t-0 border-surface-700/50 rounded-b-xl bg-surface-800/20 px-1.5 pb-1.5">
+        <AnimatePresence>
+          {addingTask && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden pt-1.5"
+            >
+              <div className="bg-surface-800 border border-surface-600 rounded-lg p-2">
+                <input
+                  ref={inputRef}
+                  autoFocus
+                  value={taskTitle}
+                  onChange={e => setTaskTitle(e.target.value)}
+                  onKeyDown={handleAddKeyDown}
+                  placeholder="Task name…"
+                  className="w-full bg-transparent text-xs text-slate-200 placeholder:text-surface-600 outline-none mb-2"
+                />
+                <div className="flex items-center gap-1">
+                  <button onClick={handleAddTask}
+                    className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors">
+                    <Check size={10} /> Add Task
+                  </button>
+                  <button onClick={() => { setAddingTask(false); setTaskTitle('') }}
+                    className="flex items-center gap-1 text-[10px] px-2 py-1 text-surface-400 hover:text-white border border-surface-700 rounded-lg transition-colors">
+                    <X size={10} /> Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <button
+          onClick={() => { setAddingTask(true); setTimeout(() => inputRef.current?.focus(), 50) }}
+          className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-surface-500 hover:text-white hover:bg-surface-700/40 rounded-lg transition-colors mt-0.5"
+        >
+          <Plus size={12} /> Add Task
+        </button>
       </div>
     </div>
   )

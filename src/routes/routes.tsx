@@ -35,7 +35,7 @@ const TimerPage = lazy(() =>
   import('@modules/timer/pages/TimerPage').then((m) => ({ default: m.TimerPage })),
 )
 const TaskBoardPage = lazy(() =>
-  import('@modules/taskboard/pages/TaskBoardPage').then((m) => ({ default: m.TaskBoardPage })),
+  import('@modules/taskboard/pages/TaskBoardPage'),
 )
 const NotesPage = lazy(() =>
   import('@modules/notes/pages/NotesPage').then((m) => ({ default: m.NotesPage })),

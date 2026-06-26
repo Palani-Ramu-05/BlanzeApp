@@ -18,7 +18,7 @@ export const validateFile = (file: File): ValidationResult => {
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
-      message: `"${file.name}" exceeds the 5 MB limit (${(file.size / 1024 / 1024).toFixed(2)} MB).`,
+      message: `"${file.name}" exceeds the 30 MB limit (${(file.size / 1024 / 1024).toFixed(2)} MB).`,
     }
   }
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {

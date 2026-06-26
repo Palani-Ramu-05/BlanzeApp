@@ -43,6 +43,6 @@ export const PAGINATION = {
 
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const
 
-export const AUTH_TYPES = ['none', 'bearer', 'basic', 'apikey', 'oauth2'] as const
+export const AUTH_TYPES = ['none', 'bearer', 'basic', 'jwt', 'apikey', 'oauth2'] as const
 
 export const BODY_TYPES = ['none', 'json', 'xml', 'text', 'form', 'formencode', 'graphql', 'binary'] as const
