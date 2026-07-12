@@ -11,6 +11,7 @@ import { usePageTitle } from '@core/hooks/usePageTitle'
 import { ROUTES } from '@core/constants/constants'
 import toast from 'react-hot-toast'
 import { useState } from 'react'
+import AppLogoName from '@/assets/images/app/new-logo.png'
 
 export const SignUpPage = () => {
   usePageTitle('Create Account')
@@ -49,11 +50,11 @@ export const SignUpPage = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="space-y-5 text-center"
       >
-        <div className="w-16 h-16 rounded-full bg-brand-600/20 border border-brand-600/30 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-full bg-brand-500/15 border border-brand-500/25 flex items-center justify-center mx-auto">
           <CheckCircle size={28} className="text-brand-400" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-white mb-2">Check your email</h1>
+          <h1 className="text-2xl font-black mb-2">Check your email</h1>
           <p className="text-sm text-surface-400">
             We sent a confirmation link to your email address. Click it to activate your account.
           </p>
@@ -69,9 +70,10 @@ export const SignUpPage = () => {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-1">
+      <img src={AppLogoName} alt="App Logo" style={{ height:'25vh', margin:'auto' }} />
       <div>
-        <h1 className="text-2xl font-black text-white mb-1">Create your account</h1>
+        <h1 className="text-2xl font-black mb-1">Create your account</h1>
         <p className="text-sm text-surface-400">Start building with BlanzeApp today</p>
       </div>
 

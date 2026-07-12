@@ -39,6 +39,7 @@ export interface NotesState {
   sortBy: 'updated' | 'created' | 'title' | 'words'
   isLoading: boolean
   isSaving: boolean
+  pendingDeletionIds: string[]
 }
 
 export const NOTE_ICONS = [

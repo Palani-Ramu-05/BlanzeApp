@@ -39,28 +39,28 @@ export function Table<T>({
     if (!col.sortable) return null
     if (sortKey === col.key) {
       return sortDir === 'asc' ? (
-        <ChevronUp size={12} className="text-brand-400" />
+        <ChevronUp size={11} className="text-brand-400" />
       ) : (
-        <ChevronDown size={12} className="text-brand-400" />
+        <ChevronDown size={11} className="text-brand-400" />
       )
     }
-    return <ChevronsUpDown size={12} className="text-surface-500" />
+    return <ChevronsUpDown size={11} className="text-surface-500" />
   }
 
   return (
-    <div className={cn('overflow-auto rounded-xl border border-surface-700', className)}>
+    <div className={cn('overflow-auto rounded-xl border border-surface-700/50 premium-card', className)}>
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-surface-700">
+          <tr className="border-b border-surface-700/50">
             {columns.map((col) => (
               <th
                 key={col.key}
                 style={{ width: col.width }}
                 className={cn(
-                  'px-4 py-3 text-left text-[10px] font-bold text-surface-400 uppercase tracking-wider bg-surface-800/50',
+                  'px-4 py-3 text-left text-[10px] font-bold text-surface-400 uppercase tracking-wider bg-surface-800/30',
                   col.align === 'center' && 'text-center',
                   col.align === 'right' && 'text-right',
-                  col.sortable && 'cursor-pointer hover:text-white select-none',
+                  col.sortable && 'cursor-pointer hover:text-surface-100 select-none',
                 )}
                 onClick={() => col.sortable && onSort?.(col.key)}
               >
@@ -91,13 +91,13 @@ export function Table<T>({
             data.map((row, index) => (
               <tr
                 key={rowKey(row)}
-                className="border-b border-surface-800 hover:bg-surface-800/50 transition-colors duration-100"
+                className="border-b border-surface-800/50 hover:bg-surface-800/30 transition-colors duration-100"
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
                     className={cn(
-                      'px-4 py-3 text-slate-300',
+                      'px-4 py-3',
                       col.align === 'center' && 'text-center',
                       col.align === 'right' && 'text-right',
                     )}

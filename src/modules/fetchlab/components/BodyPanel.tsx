@@ -143,7 +143,7 @@ export const BodyPanel = () => {
             <div className="border-2 border-dashed border-surface-700 rounded-xl p-6 text-center hover:border-surface-600 transition-colors">
               <Upload size={24} className="text-surface-500 mx-auto mb-3" />
               <button onClick={() => binaryInputRef.current?.click()}
-                className="bg-surface-800 hover:bg-surface-700 border border-surface-600 text-slate-200 text-xs font-medium px-4 py-2 rounded-lg transition-colors mb-2 block mx-auto">
+                className="bg-surface-800 hover:bg-surface-700 border border-surface-600 text-surface-200 text-xs font-medium px-4 py-2 rounded-lg transition-colors mb-2 block mx-auto">
                 Choose File
               </button>
               {binaryFileName
@@ -227,7 +227,7 @@ function FormDataPanel() {
         <div className="space-y-2 mb-3">
           <textarea value={bulkText} onChange={(e) => setBulkText(e.target.value)}
             placeholder={'field1: value1\nfield2: value2\n\n// or JSON:\n{"field": "value"}'}
-            className="w-full h-32 bg-surface-800/60 border border-surface-700/60 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none" />
+            className="w-full h-32 bg-surface-800/60 border border-surface-700/60 rounded-lg px-3 py-2 text-xs font-mono text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none" />
           <div className="flex gap-2">
             <button onClick={() => exitBulk(true)} className="px-3 py-1.5 text-[11px] font-semibold bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors">Apply</button>
             <button onClick={() => exitBulk(false)} className="px-3 py-1.5 text-[11px] font-medium text-surface-400 hover:text-white border border-surface-700 rounded-lg transition-colors">Cancel</button>
@@ -256,7 +256,7 @@ function FormDataPanel() {
                   <select
                     value={row.fieldType || 'text'}
                     onChange={(e) => dispatch(updateFormField({ id: row.id, field: 'fieldType', value: e.target.value }))}
-                    className="bg-surface-800 border border-surface-700 rounded px-1.5 py-1 text-[10px] text-slate-300 outline-none focus:border-brand-500 cursor-pointer"
+                    className="bg-surface-800 border border-surface-700 rounded px-1.5 py-1 text-[10px] text-surface-300 outline-none focus:border-brand-500 cursor-pointer"
                   >
                     <option value="text">Text</option>
                     <option value="file">File</option>
@@ -266,7 +266,7 @@ function FormDataPanel() {
                   <input type="text" value={row.key}
                     onChange={(e) => handleKeyChange(row.id, e.target.value)}
                     placeholder="field name"
-                    className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-slate-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
+                    className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-surface-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
                 </td>
                 <td className="py-1 pl-1">
                   {row.fieldType === 'file'
@@ -274,7 +274,7 @@ function FormDataPanel() {
                     : <input type="text" value={row.value}
                         onChange={(e) => handleValueChange(row.id, e.target.value)}
                         placeholder="value"
-                        className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-slate-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
+                        className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-surface-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
                   }
                 </td>
                 <td className="py-1 pl-2">
@@ -313,7 +313,7 @@ function FormFieldFileInput({ rowId }: { rowId: string }) {
           }
         }} />
       <button onClick={() => inputRef.current?.click()}
-        className="bg-surface-800 border border-surface-600 text-slate-200 text-[10px] px-2.5 py-1 rounded-lg hover:bg-surface-700 transition-colors whitespace-nowrap">
+        className="bg-surface-800 border border-surface-600 text-surface-200 text-[10px] px-2.5 py-1 rounded-lg hover:bg-surface-700 transition-colors whitespace-nowrap">
         Choose File
       </button>
       {names.length > 0
@@ -368,7 +368,7 @@ function FormEncodePanel() {
         <div className="space-y-2">
           <textarea value={bulkText} onChange={(e) => setBulkText(e.target.value)}
             placeholder={'key1: value1\nkey2: value2'}
-            className="w-full h-32 bg-surface-800/60 border border-surface-700/60 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none" />
+            className="w-full h-32 bg-surface-800/60 border border-surface-700/60 rounded-lg px-3 py-2 text-xs font-mono text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none" />
           <div className="flex gap-2">
             <button onClick={() => exitBulk(true)} className="px-3 py-1.5 text-[11px] font-semibold bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors">Apply</button>
             <button onClick={() => exitBulk(false)} className="px-3 py-1.5 text-[11px] font-medium text-surface-400 hover:text-white border border-surface-700 rounded-lg transition-colors">Cancel</button>
@@ -395,11 +395,11 @@ function FormEncodePanel() {
                   </td>
                   <td className="py-1 pr-1">
                     <input type="text" value={row.key} onChange={(e) => handleKeyChange(row.id, e.target.value)} placeholder="key"
-                      className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-slate-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
+                      className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-surface-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
                   </td>
                   <td className="py-1 pl-1">
                     <input type="text" value={row.value} onChange={(e) => handleValueChange(row.id, e.target.value)} placeholder="value"
-                      className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-slate-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
+                      className="w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-surface-200 placeholder:text-surface-600 focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors" />
                   </td>
                   <td className="py-1 pl-2">
                     <button onClick={() => dispatch(deleteKVRow({ target: 'formEncodeFields', id: row.id }))}

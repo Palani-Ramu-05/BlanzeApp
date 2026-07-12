@@ -10,8 +10,9 @@ import { Input, Button, Checkbox } from '@components/index'
 import { usePageTitle } from '@core/hooks/usePageTitle'
 import { ROUTES } from '@core/constants/constants'
 import toast from 'react-hot-toast'
+import AppLogoName from '@/assets/images/app/new-logo.png'
 
-// Cast needed because Zod default() makes the input type differ from output
+
 const signInResolver = zodResolver(signInSchema) as Resolver<SignInFormData>
 
 export const SignInPage = () => {
@@ -44,8 +45,9 @@ export const SignInPage = () => {
 
   return (
     <div className="space-y-5">
+      <img src={AppLogoName} alt="App Logo" style={{ height:'30vh', margin:'auto' }} />
       <div>
-        <h1 className="text-2xl font-black text-white mb-1">Welcome back</h1>
+        <h1 className="text-2xl font-black mb-1">Welcome back</h1>
         <p className="text-sm text-surface-400">Sign in to your account to continue</p>
       </div>
 
@@ -109,7 +111,7 @@ export const SignInPage = () => {
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-surface-700" />
+          <div className="w-full border-t border-surface-700/50" />
         </div>
         <div className="relative flex justify-center text-xs">
           <span className="px-3 bg-surface-950 text-surface-500">or</span>

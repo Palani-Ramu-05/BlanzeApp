@@ -120,7 +120,7 @@ export function TaskModal() {
                 <p className="text-[9px] text-surface-600 uppercase tracking-wider mb-1">Status</p>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: column?.color ?? '#64748b' }} />
-                  <span className="text-xs text-slate-200 font-medium">{column?.name ?? '—'}</span>
+                  <span className="text-xs text-surface-200 font-medium">{column?.name ?? '—'}</span>
                 </div>
               </div>
 
@@ -152,7 +152,7 @@ export function TaskModal() {
                     onChange={e => setAssignee(e.target.value)}
                     onBlur={() => save({ assigneeName: assignee || undefined })}
                     placeholder="Unassigned"
-                    className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-surface-600 outline-none min-w-0"
+                    className="flex-1 bg-transparent text-xs text-surface-300 placeholder:text-surface-600 outline-none min-w-0"
                   />
                 </div>
               </div>
@@ -164,7 +164,7 @@ export function TaskModal() {
                   type="date"
                   value={task.dueDate ?? ''}
                   onChange={e => save({ dueDate: e.target.value || null })}
-                  className="bg-transparent text-xs text-slate-300 outline-none cursor-pointer w-full"
+                  className="bg-transparent text-xs text-surface-300 outline-none cursor-pointer w-full"
                 />
               </div>
 
@@ -176,7 +176,7 @@ export function TaskModal() {
                   <input type="number" min={0} step={0.5}
                     value={task.estimatedHours ?? ''}
                     onChange={e => save({ estimatedHours: e.target.value ? Number(e.target.value) : undefined })}
-                    className="bg-transparent text-xs text-slate-300 outline-none w-full" placeholder="—" />
+                    className="bg-transparent text-xs text-surface-300 outline-none w-full" placeholder="—" />
                 </div>
               </div>
             </div>
@@ -212,7 +212,7 @@ export function TaskModal() {
                 onBlur={() => save({ description })}
                 placeholder="Add a description…"
                 rows={4}
-                className="w-full bg-surface-800/50 border border-surface-700/40 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors resize-none"
+                className="w-full bg-surface-800/50 border border-surface-700/40 rounded-xl px-3 py-2.5 text-xs text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors resize-none"
               />
             </div>
 
@@ -236,7 +236,7 @@ export function TaskModal() {
                         <input type="checkbox" checked={st.completed}
                           onChange={() => dispatch(toggleSubtask({ taskId: task.id, subtaskId: st.id }))}
                           className="w-3.5 h-3.5 rounded border-surface-600 bg-surface-800 text-brand-500 cursor-pointer accent-brand-500" />
-                        <span className={cn('text-xs flex-1', st.completed ? 'line-through text-surface-600' : 'text-slate-300')}>
+                        <span className={cn('text-xs flex-1', st.completed ? 'line-through text-surface-600' : 'text-surface-300')}>
                           {st.title}
                         </span>
                       </label>
@@ -249,7 +249,7 @@ export function TaskModal() {
                 <input value={newSubtask} onChange={e => setNewSubtask(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleAddSubtask() }}
                   placeholder="Add subtask…"
-                  className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors" />
+                  className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-1.5 text-xs text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors" />
                 <button onClick={handleAddSubtask}
                   className="w-7 h-7 rounded-lg bg-surface-700 hover:bg-brand-600 flex items-center justify-center text-surface-400 hover:text-white transition-all">
                   <Plus size={12} />
@@ -273,10 +273,10 @@ export function TaskModal() {
                       </div>
                       <div className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-2">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-semibold text-slate-300">{c.authorName}</span>
+                          <span className="text-[10px] font-semibold text-surface-300">{c.authorName}</span>
                           <span className="text-[10px] text-surface-600">{format(new Date(c.createdAt), 'MMM d, HH:mm')}</span>
                         </div>
-                        <p className="text-xs text-slate-300">{c.text}</p>
+                        <p className="text-xs text-surface-300">{c.text}</p>
                       </div>
                     </div>
                   ))}
@@ -287,7 +287,7 @@ export function TaskModal() {
                 <input value={newComment} onChange={e => setNewComment(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleAddComment() }}
                   placeholder="Write a comment…"
-                  className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors" />
+                  className="flex-1 bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-1.5 text-xs text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors" />
                 <button onClick={handleAddComment}
                   className="w-7 h-7 rounded-lg bg-surface-700 hover:bg-brand-600 flex items-center justify-center text-surface-400 hover:text-white transition-all">
                   <Plus size={12} />

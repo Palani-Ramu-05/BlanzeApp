@@ -73,7 +73,7 @@ export const notesService = {
       .select('*')
       .order('position', { ascending: true })
 
-    if (error) { console.error('[Notes] fetchFolders:', error.message); return [] }
+    if (error) return []
     return (data as DbFolder[]).map(toFolder)
   },
 
@@ -87,7 +87,7 @@ export const notesService = {
       parent_id: folder.parentId,
       position: folder.position,
     })
-    if (error) console.error('[Notes] createFolder:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   async updateFolder(id: string, changes: Partial<NoteFolder>): Promise<void> {
@@ -99,12 +99,12 @@ export const notesService = {
     if (changes.position !== undefined) dbChanges.position  = changes.position
 
     const { error } = await supabase.from('note_folders').update(dbChanges).eq('id', id)
-    if (error) console.error('[Notes] updateFolder:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   async deleteFolder(id: string): Promise<void> {
     const { error } = await supabase.from('note_folders').delete().eq('id', id)
-    if (error) console.error('[Notes] deleteFolder:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   // ── Notes ────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ export const notesService = {
       .select('*')
       .order('updated_at', { ascending: false })
 
-    if (error) { console.error('[Notes] fetchNotes:', error.message); return [] }
+    if (error) return []
     return (data as DbNote[]).map(toNote)
   },
 
@@ -136,7 +136,7 @@ export const notesService = {
       tags: note.tags,
       word_count: note.wordCount,
     })
-    if (error) console.error('[Notes] createNote:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   async updateNote(id: string, changes: Partial<Note>): Promise<void> {
@@ -157,11 +157,24 @@ export const notesService = {
     if (changes.updatedAt !== undefined)   dbChanges.updated_at   = changes.updatedAt
 
     const { error } = await supabase.from('notes').update(dbChanges).eq('id', id)
-    if (error) console.error('[Notes] updateNote:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   async deleteNote(id: string): Promise<void> {
     const { error } = await supabase.from('notes').delete().eq('id', id)
-    if (error) console.error('[Notes] deleteNote:', error.message)
+    if (error) throw new Error(error.message)
+  },
+
+  async batchDelete(ids: string[]): Promise<void> {
+    if (ids.length === 0) return
+    const { error } = await supabase.from('notes').delete().in('id', ids)
+    if (error) throw new Error(error.message)
+  },
+
+  async batchArchive(ids: string[]): Promise<void> {
+    if (ids.length === 0) return
+    const now = new Date().toISOString()
+    const { error } = await supabase.from('notes').update({ is_archived: true, updated_at: now }).in('id', ids)
+    if (error) throw new Error(error.message)
   },
 }

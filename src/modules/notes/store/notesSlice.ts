@@ -18,6 +18,7 @@ const initialState: NotesState = {
   sortBy: 'updated',
   isLoading: false,
   isSaving: false,
+  pendingDeletionIds: [],
 }
 
 const autosaveTimers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -185,6 +186,45 @@ const notesSlice = createSlice({
         notesService.updateNote(note.id, { isPinned: note.isPinned })
       }
     },
+
+    // ── Bulk delete with undo ──────────────────────────────────
+    setPendingDeletionIds(state, action: PayloadAction<string[]>) {
+      state.pendingDeletionIds = action.payload
+    },
+
+    undoPendingDeletions(state) {
+      state.pendingDeletionIds = []
+    },
+
+    // Permanently delete pending notes (used in Trash view)
+    confirmPendingDeletions(state) {
+      const ids = state.pendingDeletionIds
+      state.pendingDeletionIds = []
+      state.notes = state.notes.filter(n => !ids.includes(n.id))
+      if (state.activeNoteId && ids.includes(state.activeNoteId)) {
+        state.activeNoteId = state.notes.find(n => !n.isArchived)?.id ?? null
+      }
+      saveNotesState({ folders: state.folders, notes: state.notes })
+      notesService.batchDelete(ids)
+    },
+
+    // Archive pending notes (used in All Notes / Favorites / Recent views)
+    confirmPendingArchives(state) {
+      const ids = state.pendingDeletionIds
+      state.pendingDeletionIds = []
+      const now = new Date().toISOString()
+      state.notes.forEach(n => {
+        if (ids.includes(n.id)) {
+          n.isArchived = true
+          n.updatedAt = now
+        }
+      })
+      if (state.activeNoteId && ids.includes(state.activeNoteId)) {
+        state.activeNoteId = state.notes.find(n => !n.isArchived)?.id ?? null
+      }
+      saveNotesState({ folders: state.folders, notes: state.notes })
+      notesService.batchArchive(ids)
+    },
   },
 
   extraReducers: (builder) => {
@@ -214,6 +254,7 @@ export const {
   setActiveNote, setActiveFolder,
   setSearchQuery, setSidebarView, setSortBy, setSaving,
   toggleFavorite, togglePin,
+  setPendingDeletionIds, undoPendingDeletions, confirmPendingDeletions, confirmPendingArchives,
 } = notesSlice.actions
 
 export default notesSlice.reducer

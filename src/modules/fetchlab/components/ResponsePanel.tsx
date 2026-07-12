@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Copy, Trash2, Download, Save, Maximize2, Minimize2,
-  ChevronDown, X, Info,
+  ChevronDown, X, Info, Send,
 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
 import { clearResponse } from '../store/fetchlabSlice'
@@ -92,7 +92,7 @@ function PreviewTable({ data }: { data: unknown }) {
               <tr key={i} className="border-b border-surface-800/40 hover:bg-surface-800/30">
                 <td className="text-right px-3 py-2 text-surface-600 text-[10px] font-mono select-none">{i}</td>
                 {keys.map((k) => (
-                  <td key={k} className="px-3 py-2 font-mono text-slate-300 max-w-[200px] truncate" title={String(row[k] ?? '')}>
+                  <td key={k} className="px-3 py-2 font-mono text-surface-300 max-w-[200px] truncate" title={String(row[k] ?? '')}>
                     <CellValue v={row[k]} />
                   </td>
                 ))}
@@ -121,7 +121,7 @@ function PreviewTable({ data }: { data: unknown }) {
           {entries.map(([k, v]) => (
             <tr key={k} className="border-b border-surface-800/40 hover:bg-surface-800/30">
               <td className="px-3 py-2 font-mono text-sky-300 font-semibold">{k}</td>
-              <td className="px-3 py-2 font-mono text-slate-300 break-all"><CellValue v={v} /></td>
+              <td className="px-3 py-2 font-mono text-surface-300 break-all"><CellValue v={v} /></td>
             </tr>
           ))}
         </tbody>
@@ -190,13 +190,13 @@ export const ResponsePanel = () => {
 
     switch (effectiveFormat) {
       case 'json':
-        return parsedJson !== null ? <JsonViewer data={parsedJson} /> : <pre className="text-[11px] font-mono text-slate-300 whitespace-pre-wrap break-all">{body}</pre>
+        return parsedJson !== null ? <JsonViewer data={parsedJson} /> : <pre className="text-[11px] font-mono text-surface-300 whitespace-pre-wrap break-all">{body}</pre>
       case 'xml':
       case 'html':
       case 'js':
       case 'markdown':
       case 'raw':
-        return <pre className="text-[11px] font-mono text-slate-300 whitespace-pre-wrap break-all">{body}</pre>
+        return <pre className="text-[11px] font-mono text-surface-300 whitespace-pre-wrap break-all">{body}</pre>
       case 'yaml': {
         const yamlStr = parsedJson !== null ? `---${jsonToYaml(parsedJson)}` : body
         return <pre className="text-[11px] font-mono text-green-300 whitespace-pre-wrap break-all">{yamlStr}</pre>
@@ -210,7 +210,7 @@ export const ResponsePanel = () => {
       case 'preview':
         return <PreviewTable data={parsedJson} />
       default:
-        return <pre className="text-[11px] font-mono text-slate-300 whitespace-pre-wrap break-all">{body}</pre>
+        return <pre className="text-[11px] font-mono text-surface-300 whitespace-pre-wrap break-all">{body}</pre>
     }
   }, [response, effectiveFormat, parsedJson])
 
@@ -298,7 +298,7 @@ export const ResponsePanel = () => {
     <>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* ── Top bar: tabs on left, status + actions on right ── */}
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-surface-700/60 flex-shrink-0 bg-surface-900/40">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-surface-700/40 flex-shrink-0 bg-surface-800/30">
           <span className="text-[10px] font-bold text-surface-500 uppercase tracking-widest">Response</span>
 
           <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export const ResponsePanel = () => {
           {activeTab === 'body' && response && (
             <div className="ml-auto flex items-center gap-1.5 pr-1">
               <select ref={formatDropRef} value={bodyFormat} onChange={(e) => setBodyFormat(e.target.value as BodyFormat)}
-                className="bg-surface-800 border border-surface-700 rounded-lg px-2 py-0.5 text-[10px] text-slate-300 outline-none focus:border-brand-500 cursor-pointer appearance-none">
+                className="bg-surface-800 border border-surface-700 rounded-lg px-2 py-0.5 text-[10px] text-surface-300 outline-none focus:border-brand-500 cursor-pointer appearance-none">
                 {bodyFormats.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
               </select>
               <ChevronDown size={11} className="text-surface-500 -ml-5 pointer-events-none" />
@@ -377,8 +377,12 @@ export const ResponsePanel = () => {
           <AnimatePresence mode="wait">
             {!response && !sending ? (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex items-center justify-center h-full min-h-24">
-                <p className="text-xs text-surface-600">Hit Send to see the response…</p>
+                className="flex flex-col items-center justify-center h-full min-h-24 gap-2">
+                <div className="w-10 h-10 rounded-xl bg-surface-800/60 border border-surface-700/40 flex items-center justify-center">
+                  <Send size={18} className="text-surface-600" />
+                </div>
+                <p className="text-sm font-medium text-surface-400">No response yet</p>
+                <p className="text-[11px] text-surface-600">Hit Send to see the response</p>
               </motion.div>
             ) : (
               <motion.div key="response" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-full">
@@ -419,10 +423,10 @@ export const ResponsePanel = () => {
                           {cookies.map((c) => (
                             <tr key={c.id} className="border-b border-surface-800/40">
                               <td className="py-2 pr-4 font-mono text-cyan-400">{c.name}</td>
-                              <td className="py-2 pr-4 text-slate-300 break-all max-w-[200px] truncate">{c.value}</td>
-                              <td className="py-2 pr-4 text-slate-400">{c.domain || '—'}</td>
-                              <td className="py-2 pr-4 text-slate-400">{c.path || '/'}</td>
-                              <td className="py-2 pr-4 text-slate-400">{c.expires || '—'}</td>
+                              <td className="py-2 pr-4 text-surface-300 break-all max-w-[200px] truncate">{c.value}</td>
+                              <td className="py-2 pr-4 text-surface-400">{c.domain || '—'}</td>
+                              <td className="py-2 pr-4 text-surface-400">{c.path || '/'}</td>
+                              <td className="py-2 pr-4 text-surface-400">{c.expires || '—'}</td>
                               <td className="py-2 text-surface-400 text-[10px]">
                                 {[c.httponly && 'HttpOnly', c.secure && 'Secure', c.samesite && `SameSite=${c.samesite}`].filter(Boolean).join(', ') || '—'}
                               </td>
@@ -480,7 +484,7 @@ export const ResponsePanel = () => {
                       ].map(([label, value]) => (
                         <div key={label} className="bg-surface-800/50 border border-surface-700/40 rounded-lg px-2.5 py-1.5">
                           <p className="text-[10px] text-surface-500 uppercase tracking-wider mb-0.5">{label}</p>
-                          <p className="text-[11px] text-slate-200 font-mono truncate" title={String(value)}>{value}</p>
+                          <p className="text-[11px] text-surface-200 font-mono truncate" title={String(value)}>{value}</p>
                         </div>
                       ))}
                     </div>
@@ -508,7 +512,7 @@ export const ResponsePanel = () => {
                                   {Object.entries(response.requestSnapshot.headers).map(([k, v]) => (
                                     <tr key={k} className="border-b border-surface-800/40">
                                       <td className="py-1 pr-4 font-mono text-cyan-400 w-1/3">{k}</td>
-                                      <td className="py-1 text-slate-300 break-all">{v}</td>
+                                      <td className="py-1 text-surface-300 break-all">{v}</td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -519,7 +523,7 @@ export const ResponsePanel = () => {
                         {response.requestSnapshot.body && (
                           <div className="bg-surface-800/50 border border-surface-700/40 rounded-lg p-3">
                             <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-2">Request Body</p>
-                            <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap break-all">{response.requestSnapshot.body}</pre>
+                            <pre className="text-xs font-mono text-surface-300 whitespace-pre-wrap break-all">{response.requestSnapshot.body}</pre>
                           </div>
                         )}
                       </>
@@ -534,7 +538,7 @@ export const ResponsePanel = () => {
                           <div className="flex-1 bg-surface-700 rounded-full h-1.5">
                             <div className="bg-brand-500 h-1.5 rounded-full" style={{ width: '100%' }} />
                           </div>
-                          <span className="text-xs font-mono text-slate-300 w-16 text-right">{formatTime(response.duration)}</span>
+                          <span className="text-xs font-mono text-surface-300 w-16 text-right">{formatTime(response.duration)}</span>
                         </div>
                       </div>
                     </div>
@@ -561,7 +565,7 @@ export const ResponsePanel = () => {
               </div>
               <div className="flex items-center gap-2">
                 <select value={bodyFormat} onChange={(e) => setBodyFormat(e.target.value as BodyFormat)}
-                  className="bg-surface-800 border border-surface-700 rounded-lg px-2 py-0.5 text-[10px] text-slate-300 outline-none">
+                  className="bg-surface-800 border border-surface-700 rounded-lg px-2 py-0.5 text-[10px] text-surface-300 outline-none">
                   {bodyFormats.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
                 </select>
                 <button onClick={() => { navigator.clipboard.writeText(response.body); toast.success('Copied') }}

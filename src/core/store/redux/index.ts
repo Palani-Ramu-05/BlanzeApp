@@ -4,6 +4,10 @@ import fetchlabReducer from '@modules/fetchlab/store/fetchlabSlice'
 import vaultdropReducer from '@modules/vaultdrop/store/vaultdropSlice'
 import taskboardReducer from '@modules/taskboard/store/taskboardSlice'
 import notesReducer from '@modules/notes/store/notesSlice'
+import webScraperReducer from '@modules/web-scraper/store/webscraperSlice'
+import fileStudioReducer from '@modules/file-studio/store/fileStudioSlice'
+import { aiWorkspaceReducer } from '@modules/ai-workspace/store/aiWorkspaceSlice'
+import apiMockServerReducer from '@modules/api-mock-server/store/apiMockServerSlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,12 +16,24 @@ export const store = configureStore({
     vaultdrop: vaultdropReducer,
     taskboard: taskboardReducer,
     notes: notesReducer,
+    webScraper: webScraperReducer,
+    fileStudio: fileStudioReducer,
+    aiWorkspace: aiWorkspaceReducer,
+    apiMockServer: apiMockServerReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['fetchlab/sendRequest/fulfilled'],
-        ignoredPaths: ['fetchlab.currentRequest.formFiles'],
+        ignoredActions: [
+          'fetchlab/sendRequest/fulfilled',
+          'fileStudio/setResult',
+          'fileStudio/addMultipleFile',
+        ],
+        ignoredPaths: [
+          'fetchlab.currentRequest.formFiles',
+          'fileStudio.result.blob',
+          'fileStudio.multipleFiles',
+        ],
       },
     }),
 })

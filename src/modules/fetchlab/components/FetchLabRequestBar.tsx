@@ -44,17 +44,21 @@ export const FetchLabRequestBar = () => {
         onKeyDown={(e) => { if (e.key === 'Enter' && currentRequest) dispatch(sendRequest()) }}
       />
 
-      <Button
-        size="sm"
-        icon={<Send size={14} />}
-        loading={sending}
+      <button
         onClick={() => dispatch(sendRequest())}
-        disabled={!currentRequest}
-        className="px-6 font-bold"
+        disabled={!currentRequest || sending}
         title="Send (Ctrl+Enter)"
+        className={cn(
+          'flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.97]',
+          'bg-gradient-to-r from-brand-600 to-brand-500 text-white',
+          'hover:from-brand-500 hover:to-brand-400 shadow-glow-sm',
+          'disabled:opacity-50 disabled:pointer-events-none',
+          sending && 'animate-pulse',
+        )}
       >
-        Send
-      </Button>
+        <Send size={14} className={sending ? 'animate-spin' : ''} />
+        {sending ? 'Sending…' : 'Send'}
+      </button>
     </div>
   )
 }

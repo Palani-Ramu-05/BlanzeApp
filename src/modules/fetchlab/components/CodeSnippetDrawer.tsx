@@ -297,12 +297,12 @@ export function CodeSnippetDrawer({ open, onClose }: Props) {
                 <>
                   <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider w-10">Code</span>
                   <select value={lang} onChange={(e) => handleLangChange(e.target.value as Lang)}
-                    className="bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-brand-500 cursor-pointer appearance-none flex-1">
+                    className="bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-surface-200 outline-none focus:border-brand-500 cursor-pointer appearance-none flex-1">
                     {LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
                   </select>
                   {langDef.libs.length > 1 && (
                     <select value={lib} onChange={(e) => setLib(e.target.value)}
-                      className="bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-brand-500 cursor-pointer appearance-none flex-1">
+                      className="bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-surface-200 outline-none focus:border-brand-500 cursor-pointer appearance-none flex-1">
                       {langDef.libs.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
                     </select>
                   )}
@@ -311,7 +311,7 @@ export function CodeSnippetDrawer({ open, onClose }: Props) {
                 <>
                   <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider w-10">Types</span>
                   <select value={typeLang} onChange={(e) => setTypeLang(e.target.value as TypeLang)}
-                    className="bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-brand-500 cursor-pointer appearance-none flex-1">
+                    className="bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-surface-200 outline-none focus:border-brand-500 cursor-pointer appearance-none flex-1">
                     {TYPE_LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
                   </select>
                 </>
@@ -331,7 +331,7 @@ export function CodeSnippetDrawer({ open, onClose }: Props) {
                   {lines.map((line, i) => (
                     <tr key={i} className="hover:bg-surface-900/50">
                       <td className="select-none text-right text-[11px] text-surface-700 pr-4 pl-3 py-0 leading-6 w-10 border-r border-surface-800/60 align-top">{i + 1}</td>
-                      <td className="pl-4 pr-4 py-0 leading-6 text-slate-300 whitespace-pre break-all align-top">{line || ' '}</td>
+                      <td className="pl-4 pr-4 py-0 leading-6 text-surface-300 whitespace-pre break-all align-top">{line || ' '}</td>
                     </tr>
                   ))}
                 </tbody>

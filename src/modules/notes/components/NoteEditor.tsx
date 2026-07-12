@@ -57,7 +57,7 @@ function LinkInput({ onConfirm, onCancel }: { onConfirm: (url: string) => void; 
     <div className="flex items-center gap-1 bg-surface-800 border border-surface-600 rounded-lg px-2 py-1">
       <input autoFocus value={val} onChange={e => setVal(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') onConfirm(val); if (e.key === 'Escape') onCancel() }}
-        placeholder="https://..." className="bg-transparent text-xs outline-none w-40 text-slate-200" />
+        placeholder="https://..." className="bg-transparent text-xs outline-none w-40 text-surface-200" />
       <button onClick={() => onConfirm(val)} className="text-brand-400 hover:text-brand-300 text-xs">✓</button>
       <button onClick={onCancel} className="text-surface-500 hover:text-white text-xs">✗</button>
     </div>
@@ -201,7 +201,7 @@ function CodeEditor({ noteId, rawContent, onChange }: { noteId: string; rawConte
           onKeyDown={handleKeyDown}
           onScroll={syncScroll}
           spellCheck={false}
-          className="flex-1 bg-transparent font-mono text-[13px] text-slate-200 resize-none outline-none leading-5 overflow-auto"
+          className="flex-1 bg-transparent font-mono text-[13px] text-surface-200 resize-none outline-none leading-5 overflow-auto"
           style={{ padding: '16px 16px 16px 12px', tabSize: 2 }}
           placeholder="Paste or type your content here — formatting is preserved exactly as entered…"
         />

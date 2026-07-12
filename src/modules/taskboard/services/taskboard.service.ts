@@ -44,7 +44,7 @@ export const taskboardService = {
   // ── Spaces ─────────────────────────────────────────────
   async fetchSpaces(): Promise<Space[]> {
     const { data, error } = await supabase.from('tb_spaces').select('*').order('position')
-    if (error) { console.error('[TB] fetchSpaces:', error.message); return [] }
+    if (error) { return [] }
     return (data as DbSpace[]).map(toSpace)
   },
   async createSpace(s: Space, userId: string): Promise<void> {
@@ -52,21 +52,21 @@ export const taskboardService = {
       id: s.id, user_id: userId, name: s.name, color: s.color, icon: s.icon,
       description: s.description, position: s.position,
     })
-    if (error) console.error('[TB] createSpace:', error.message)
+    if (error) throw new Error(error.message)
   },
   async updateSpace(id: string, changes: Partial<Pick<Space, 'name' | 'color' | 'icon' | 'description' | 'position'>>): Promise<void> {
     const { error } = await supabase.from('tb_spaces').update(changes).eq('id', id)
-    if (error) console.error('[TB] updateSpace:', error.message)
+    if (error) throw new Error(error.message)
   },
   async deleteSpace(id: string): Promise<void> {
     const { error } = await supabase.from('tb_spaces').delete().eq('id', id)
-    if (error) console.error('[TB] deleteSpace:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   // ── Projects ────────────────────────────────────────────
   async fetchProjects(): Promise<Project[]> {
     const { data, error } = await supabase.from('tb_projects').select('*').order('position')
-    if (error) { console.error('[TB] fetchProjects:', error.message); return [] }
+    if (error) { return [] }
     return (data as DbProject[]).map(toProject)
   },
   async createProject(p: Project, userId: string): Promise<void> {
@@ -75,21 +75,21 @@ export const taskboardService = {
       description: p.description, color: p.color, icon: p.icon,
       status: p.status, position: p.position,
     })
-    if (error) console.error('[TB] createProject:', error.message)
+    if (error) throw new Error(error.message)
   },
   async updateProject(id: string, changes: Partial<Pick<Project, 'name' | 'color' | 'icon' | 'description' | 'status' | 'position'>>): Promise<void> {
     const { error } = await supabase.from('tb_projects').update(changes).eq('id', id)
-    if (error) console.error('[TB] updateProject:', error.message)
+    if (error) throw new Error(error.message)
   },
   async deleteProject(id: string): Promise<void> {
     const { error } = await supabase.from('tb_projects').delete().eq('id', id)
-    if (error) console.error('[TB] deleteProject:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   // ── Columns ─────────────────────────────────────────────
   async fetchColumns(): Promise<Column[]> {
     const { data, error } = await supabase.from('tb_columns').select('*').order('position')
-    if (error) { console.error('[TB] fetchColumns:', error.message); return [] }
+    if (error) { return [] }
     return (data as DbColumn[]).map(toColumn)
   },
   async createColumn(c: Column, userId: string): Promise<void> {
@@ -97,7 +97,7 @@ export const taskboardService = {
       id: c.id, user_id: userId, project_id: c.projectId, name: c.name,
       color: c.color, position: c.position, is_done: c.isDone,
     })
-    if (error) console.error('[TB] createColumn:', error.message)
+    if (error) throw new Error(error.message)
   },
   async updateColumn(id: string, changes: Partial<Pick<Column, 'name' | 'color' | 'position' | 'isDone'>>): Promise<void> {
     const dbChanges: Record<string, unknown> = {}
@@ -106,11 +106,11 @@ export const taskboardService = {
     if (changes.position !== undefined) dbChanges.position = changes.position
     if (changes.isDone !== undefined)   dbChanges.is_done  = changes.isDone
     const { error } = await supabase.from('tb_columns').update(dbChanges).eq('id', id)
-    if (error) console.error('[TB] updateColumn:', error.message)
+    if (error) throw new Error(error.message)
   },
   async deleteColumn(id: string): Promise<void> {
     const { error } = await supabase.from('tb_columns').delete().eq('id', id)
-    if (error) console.error('[TB] deleteColumn:', error.message)
+    if (error) throw new Error(error.message)
   },
 
   // ── Tasks ───────────────────────────────────────────────
@@ -118,7 +118,7 @@ export const taskboardService = {
     let q = supabase.from('tb_tasks').select('*').order('position')
     if (projectId) q = q.eq('project_id', projectId)
     const { data, error } = await q
-    if (error) { console.error('[TB] fetchTasks:', error.message); return [] }
+    if (error) { return [] }
     return (data as DbTask[]).map(toTask)
   },
   async createTask(t: Task, userId: string): Promise<void> {
@@ -130,7 +130,7 @@ export const taskboardService = {
       comments: t.comments, estimated_hours: t.estimatedHours ?? null,
       assignee_name: t.assigneeName ?? null, attachments: t.attachments,
     })
-    if (error) console.error('[TB] createTask:', error.message)
+    if (error) throw new Error(error.message)
   },
   async updateTask(id: string, changes: Partial<Task>): Promise<void> {
     const db: Record<string, unknown> = {}
@@ -148,10 +148,10 @@ export const taskboardService = {
     if (changes.assigneeName !== undefined)   db.assignee_name   = changes.assigneeName
     if (changes.attachments !== undefined)    db.attachments     = changes.attachments
     const { error } = await supabase.from('tb_tasks').update(db).eq('id', id)
-    if (error) console.error('[TB] updateTask:', error.message)
+    if (error) throw new Error(error.message)
   },
   async deleteTask(id: string): Promise<void> {
     const { error } = await supabase.from('tb_tasks').delete().eq('id', id)
-    if (error) console.error('[TB] deleteTask:', error.message)
+    if (error) throw new Error(error.message)
   },
 }

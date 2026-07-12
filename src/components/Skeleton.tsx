@@ -2,7 +2,6 @@ import { cn } from '@utils/index'
 
 interface SkeletonProps {
   className?: string
-  lines?: number
 }
 
 export const Skeleton = ({ className }: SkeletonProps) => (
@@ -16,7 +15,7 @@ export const Skeleton = ({ className }: SkeletonProps) => (
 )
 
 export const SkeletonCard = () => (
-  <div className="p-4 rounded-xl border border-surface-700 bg-surface-900 space-y-3">
+  <div className="p-4 rounded-xl border border-surface-700/50 bg-surface-900 space-y-3">
     <Skeleton className="h-4 w-2/3" />
     <Skeleton className="h-3 w-full" />
     <Skeleton className="h-3 w-4/5" />

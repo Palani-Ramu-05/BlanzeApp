@@ -104,10 +104,10 @@ export const KVTable = ({ target }: Props) => {
             value={bulkText}
             onChange={(e) => setBulkText(e.target.value)}
             placeholder={'Authorization: Bearer token\nContent-Type: application/json\n\n// or JSON:\n{"key": "value"}'}
-            className="w-full h-40 bg-surface-800/60 border border-surface-700/60 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none"
+            className="w-full h-40 bg-surface-800/60 border border-surface-700/60 rounded-lg px-3 py-2 text-xs font-mono text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none"
           />
           <div className="flex gap-2">
-            <button onClick={() => exitBulk(true)} className="px-3 py-1.5 text-[11px] font-semibold bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors">Apply</button>
+            <button onClick={() => exitBulk(true)} className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-lg shadow-glow-sm transition-all">Apply</button>
             <button onClick={() => exitBulk(false)} className="px-3 py-1.5 text-[11px] font-medium text-surface-400 hover:text-white border border-surface-700 rounded-lg transition-colors">Cancel</button>
           </div>
         </div>
@@ -134,7 +134,7 @@ export const KVTable = ({ target }: Props) => {
                     onChange={(e) => handleKeyChange(row.id, e.target.value)}
                     placeholder="key"
                     className={cn('w-full bg-transparent border border-transparent rounded-md px-2 py-1.5',
-                      'font-mono text-xs text-slate-200 placeholder:text-surface-600',
+                      'font-mono text-xs text-surface-200 placeholder:text-surface-600',
                       'focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors',
                     )} />
                 </td>
@@ -143,7 +143,7 @@ export const KVTable = ({ target }: Props) => {
                     onChange={(e) => handleValueChange(row.id, e.target.value)}
                     placeholder="value"
                     className={cn('w-full bg-transparent border border-transparent rounded-md px-2 py-1.5',
-                      'font-mono text-xs text-slate-200 placeholder:text-surface-600',
+                      'font-mono text-xs text-surface-200 placeholder:text-surface-600',
                       'focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors',
                     )} />
                 </td>

@@ -102,7 +102,7 @@ export function KanbanColumn({ column, tasks, projectId, spaceId }: Props) {
             onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') { setNameVal(column.name); setEditingName(false) } }}
             className="flex-1 bg-transparent text-xs font-semibold text-white outline-none border-b border-brand-500" />
         ) : (
-          <span className="flex-1 text-xs font-semibold text-slate-200 truncate uppercase tracking-wide">{column.name}</span>
+          <span className="flex-1 text-xs font-semibold text-surface-200 truncate uppercase tracking-wide">{column.name}</span>
         )}
 
         {/* Task count */}
@@ -221,7 +221,7 @@ export function KanbanColumn({ column, tasks, projectId, spaceId }: Props) {
                   onChange={e => setTaskTitle(e.target.value)}
                   onKeyDown={handleAddKeyDown}
                   placeholder="Task name…"
-                  className="w-full bg-transparent text-xs text-slate-200 placeholder:text-surface-600 outline-none mb-2"
+                  className="w-full bg-transparent text-xs text-surface-200 placeholder:text-surface-600 outline-none mb-2"
                 />
                 <div className="flex items-center gap-1">
                   <button onClick={handleAddTask}

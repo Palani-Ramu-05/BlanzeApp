@@ -33,8 +33,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             className={cn(
               'w-4 h-4 rounded border-2 transition-all duration-150',
               'border-surface-500 bg-transparent',
-              'peer-checked:border-brand-500 peer-checked:bg-brand-600',
+              'peer-checked:border-brand-500 peer-checked:bg-brand-500',
               'group-hover:border-brand-400',
+              'peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500/40 peer-focus-visible:ring-offset-1',
             )}
           />
           {checked && (
@@ -55,7 +56,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         </div>
         {(label || description) && (
           <div>
-            {label && <span className="text-sm text-slate-200 font-medium">{label}</span>}
+            {label && <span className="text-sm font-medium text-[rgb(var(--color-text-primary))]">{label}</span>}
             {description && <p className="text-xs text-surface-400 mt-0.5">{description}</p>}
           </div>
         )}

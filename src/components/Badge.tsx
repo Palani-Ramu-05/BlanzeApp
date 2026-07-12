@@ -8,18 +8,18 @@ interface BadgeProps {
 }
 
 const variantClasses = {
-  default: 'bg-surface-700 text-surface-300',
-  success: 'bg-green-500/15 text-green-400 border border-green-500/25',
-  warning: 'bg-amber-500/15 text-amber-400 border border-amber-500/25',
-  danger: 'bg-red-500/15 text-red-400 border border-red-500/25',
-  info: 'bg-brand-500/15 text-brand-400 border border-brand-500/25',
-  purple: 'bg-purple-500/15 text-purple-400 border border-purple-500/25',
-  cyan: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/25',
+  default: 'bg-surface-700/70 text-surface-300 border border-surface-600/50',
+  success: 'bg-emerald-500/12 text-emerald-400 border border-emerald-500/25',
+  warning: 'bg-amber-500/12 text-amber-400 border border-amber-500/25',
+  danger: 'bg-red-500/12 text-red-400 border border-red-500/25',
+  info: 'bg-brand-500/12 text-brand-400 border border-brand-500/25',
+  purple: 'bg-purple-500/12 text-purple-400 border border-purple-500/25',
+  cyan: 'bg-cyan-500/12 text-cyan-400 border border-cyan-500/25',
 }
 
 const sizeClasses = {
-  sm: 'text-[10px] px-1.5 py-0.5 rounded-md',
-  md: 'text-xs px-2 py-0.5 rounded-lg',
+  sm: 'text-[9px] px-1.5 py-0.5 rounded-md',
+  md: 'text-[11px] px-2 py-0.5 rounded-lg',
 }
 
 export const Badge = ({ children, variant = 'default', size = 'md', className }: BadgeProps) => (

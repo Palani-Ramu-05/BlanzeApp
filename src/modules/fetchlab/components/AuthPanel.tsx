@@ -115,7 +115,7 @@ export const AuthPanel = () => {
           </div>
           {authData.basicUsername && (
             <p className="text-[10px] text-surface-500 font-mono">
-              Header: <span className="text-slate-300">Authorization: Basic {btoa(`${authData.basicUsername}:${authData.basicPassword || ''}`)}</span>
+              Header: <span className="text-surface-300">Authorization: Basic {btoa(`${authData.basicUsername}:${authData.basicPassword || ''}`)}</span>
             </p>
           )}
         </>
@@ -155,7 +155,7 @@ export const AuthPanel = () => {
               value={authData.jwtPayload || '{\n  "sub": "1234567890",\n  "name": "John Doe",\n  "iat": 1516239022\n}'}
               onChange={(e) => update('jwtPayload', e.target.value)}
               placeholder='{"sub": "1234567890", "name": "John Doe"}'
-              className="w-full h-20 bg-surface-800/60 border border-surface-700/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none"
+              className="w-full h-20 bg-surface-800/60 border border-surface-700/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none"
             />
           </div>
           <div>
@@ -164,7 +164,7 @@ export const AuthPanel = () => {
               value={authData.jwtHeader || ''}
               onChange={(e) => update('jwtHeader', e.target.value)}
               placeholder='{"alg": "HS256", "typ": "JWT"}'
-              className="w-full h-12 bg-surface-800/60 border border-surface-700/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none"
+              className="w-full h-12 bg-surface-800/60 border border-surface-700/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors resize-none"
             />
           </div>
           <button
@@ -184,7 +184,7 @@ export const AuthPanel = () => {
                   {copied ? <><Check size={10} /> Copied</> : <><Copy size={10} /> Copy</>}
                 </button>
               </div>
-              <p className="text-[10px] font-mono text-slate-300 break-all leading-relaxed">{authData.jwtToken}</p>
+              <p className="text-[10px] font-mono text-surface-300 break-all leading-relaxed">{authData.jwtToken}</p>
             </div>
           )}
         </div>

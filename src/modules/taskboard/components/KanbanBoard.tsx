@@ -131,7 +131,7 @@ export function KanbanBoard({ projectId, spaceId }: Props) {
                 onChange={e => setNewColName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleCreateColumn(); if (e.key === 'Escape') { setCreatingColumn(false); setNewColName('') } }}
                 placeholder="Column name (e.g. In Review)…"
-                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-2.5 py-1.5 text-xs text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500 transition-colors"
               />
               <div className="flex gap-1.5">
                 <button onClick={handleCreateColumn}

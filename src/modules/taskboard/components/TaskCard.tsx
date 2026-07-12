@@ -50,7 +50,7 @@ export function TaskCard({ task, onClick, isDragging }: Props) {
       )}
 
       {/* Title */}
-      <p className={cn('text-sm font-medium text-slate-200 leading-snug mb-2', task.isCompleted && 'line-through text-surface-500')}>
+      <p className={cn('text-sm font-medium text-surface-200 leading-snug mb-2', task.isCompleted && 'line-through text-surface-500')}>
         {task.title}
       </p>
 

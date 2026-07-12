@@ -49,15 +49,33 @@ const stripRuntimeFiles = (items: FetchItem[]): FetchItem[] => {
 const saveItems = (items: FetchItem[]) =>
   localStorage.setItem(LS_ITEMS, JSON.stringify(stripRuntimeFiles(items)))
 
-// Debounced Supabase workspace sync
+// ── Supabase workspace sync ──────────────────────────────────
 let syncTimer: ReturnType<typeof setTimeout> | null = null
+let pendingSnap: { items: FetchItem[]; env_vars: EnvVar[]; open_tabs: { openTabIds: string[]; activeTabId: string | null } } | null = null
+
+const doSync = async (snap: typeof pendingSnap) => {
+  if (!snap) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  try {
+    await fetchlabService.saveWorkspace(user.id, snap.items, snap.env_vars, snap.open_tabs)
+  } catch {
+    // Retry once after 1s
+    setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) fetchlabService.saveWorkspace(user.id, snap.items, snap.env_vars, snap.open_tabs)
+    }, 1000)
+  }
+}
+
 const scheduleSyncWorkspace = (items: FetchItem[], envVars: EnvVar[], openTabIds: string[], activeTabId: string | null) => {
-  const snap = { items: stripRuntimeFiles(items), env_vars: cloneJson(envVars), open_tabs: { openTabIds, activeTabId } }
+  pendingSnap = { items: stripRuntimeFiles(items), env_vars: cloneJson(envVars), open_tabs: { openTabIds, activeTabId } }
   if (syncTimer) clearTimeout(syncTimer)
-  syncTimer = setTimeout(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) await fetchlabService.saveWorkspace(user.id, snap.items, snap.env_vars, snap.open_tabs)
-  }, 1500)
+  syncTimer = setTimeout(() => {
+    const snap = pendingSnap
+    pendingSnap = null
+    doSync(snap)
+  }, 300)
 }
 
 // ── Tree helpers ──────────────────────────────────────────────
@@ -674,6 +692,10 @@ const fetchlabSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(loadFetchLabFromSupabase.fulfilled, (state, action) => {
       const workspace = action.payload as { items: FetchItem[]; envVars: EnvVar[]; openTabs?: { openTabIds: string[]; activeTabId: string | null } } | null
+      // Prefer localStorage — it is always saved immediately on every change.
+      // Supabase is debounced and may be stale. Only restore from Supabase when
+      // localStorage is empty (first visit, cleared storage, or new device).
+      if (state.items.length > 0 || state.envVars.length > 0) return
       if (workspace && (workspace.items.length > 0 || workspace.envVars.length > 0)) {
         state.items = workspace.items
         state.envVars = workspace.envVars

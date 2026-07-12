@@ -37,7 +37,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={id}
-            className="text-xs font-semibold text-surface-300 uppercase tracking-wide"
+            className="text-[11px] font-semibold text-surface-300"
           >
             {label}
           </label>
@@ -63,7 +63,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                 key={opt.value}
                 value={opt.value}
                 disabled={opt.disabled}
-                className="bg-surface-800"
+                className="bg-surface-900 text-surface-100"
               >
                 {opt.label}
               </option>
@@ -74,8 +74,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none"
           />
         </div>
-        {error && <p className="text-xs text-red-400">{error}</p>}
-        {hint && !error && <p className="text-xs text-surface-400">{hint}</p>}
+        {error && <p className="text-[11px] text-red-400">{error}</p>}
+        {hint && !error && <p className="text-[11px] text-surface-400">{hint}</p>}
       </div>
     )
   },

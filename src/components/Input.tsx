@@ -36,7 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={id}
-            className="text-xs font-semibold text-surface-300 uppercase tracking-wide"
+            className="text-[11px] font-semibold text-surface-300"
           >
             {label}
           </label>
@@ -63,8 +63,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {isPassword && (
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-100 transition-colors"
               onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
@@ -75,8 +76,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
         </div>
-        {error && <p className="text-xs text-red-400">{error}</p>}
-        {hint && !error && <p className="text-xs text-surface-400">{hint}</p>}
+        {error && <p className="text-[11px] text-red-400">{error}</p>}
+        {hint && !error && <p className="text-[11px] text-surface-400">{hint}</p>}
       </div>
     )
   },

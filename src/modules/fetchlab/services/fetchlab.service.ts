@@ -10,7 +10,6 @@ export const fetchlabService = {
 
     if (error) {
       if (error.code === 'PGRST116') return null
-      console.error('[FetchLab] loadWorkspace:', error.message)
       return null
     }
 
@@ -33,6 +32,6 @@ export const fetchlabService = {
         { user_id: userId, items, env_vars: envVars, open_tabs: openTabs ?? null, updated_at: new Date().toISOString() },
         { onConflict: 'user_id' },
       )
-    if (error) console.error('[FetchLab] saveWorkspace:', error.message)
+    if (error) throw new Error(error.message)
   },
 }

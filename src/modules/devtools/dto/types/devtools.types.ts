@@ -1,10 +1,12 @@
+export type FilterId = 'all' | 'popular' | 'new' | 'favorites' | 'recent' | 'advanced'
+
 export type CategoryId =
-  | 'encode-decode'
-  | 'ui-design'
-  | 'data'
-  | 'text'
-  | 'utility'
-  | 'cryptography'
+  | 'encoding'
+  | 'json-data'
+  | 'design'
+  | 'text-tools'
+  | 'utilities'
+  | 'security'
 
 export interface ToolDef {
   id: string

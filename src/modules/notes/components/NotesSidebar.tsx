@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Search, Star, Pin, ChevronRight, Trash2,
   FileText, Clock, Heart, RotateCcw, FileCode, ChevronDown,
-  SlidersHorizontal, X,
+  SlidersHorizontal, X, Check,
 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@core/hooks/useStore'
 import {
@@ -20,7 +20,14 @@ const METHOD_BADGE: Record<string, string> = {
   code: 'text-amber-400 bg-amber-500/15',
 }
 
-export function NotesSidebar() {
+interface NotesSidebarProps {
+  bulkMode?: boolean
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
+  onSelectAll?: () => void
+}
+
+export function NotesSidebar({ bulkMode = false, selectedIds = new Set(), onToggleSelect, onSelectAll }: NotesSidebarProps) {
   const dispatch = useAppDispatch()
   const { folders, notes, activeNoteId, activeFolderId, searchQuery, sidebarView, sortBy } = useAppSelector(s => s.notes)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
@@ -67,7 +74,7 @@ export function NotesSidebar() {
 
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) return
-    dispatch(createFolder({ name: newFolderName, color: newFolderColor, icon: '📁' }))
+    dispatch(createFolder({ name: newFolderName, color: newFolderColor, icon: 'ðŸ“' }))
     setNewFolderName(''); setShowNewFolder(false)
   }
 
@@ -105,7 +112,7 @@ export function NotesSidebar() {
             value={searchQuery}
             onChange={e => dispatch(setSearchQuery(e.target.value))}
             placeholder="Search notes, tags…"
-            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-8 pr-8 py-1.5 text-xs outline-none focus:border-brand-500 transition-colors placeholder:text-surface-600 text-slate-200"
+            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-8 pr-8 py-1.5 text-xs outline-none focus:border-brand-500 transition-colors placeholder:text-surface-600 text-surface-200"
           />
           {searchQuery && (
             <button onClick={() => dispatch(setSearchQuery(''))}
@@ -160,7 +167,7 @@ export function NotesSidebar() {
                 <input autoFocus value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') setShowNewFolder(false) }}
                   placeholder="Folder name…"
-                  className="flex-1 bg-transparent text-xs outline-none text-slate-200 placeholder:text-surface-600" />
+                  className="flex-1 bg-transparent text-xs outline-none text-surface-200 placeholder:text-surface-600" />
                 <div className="flex gap-1">
                   {FOLDER_COLORS.slice(0, 6).map(c => (
                     <button key={c} onClick={() => setNewFolderColor(c)}
@@ -217,7 +224,7 @@ export function NotesSidebar() {
       <div className="h-px bg-surface-700/50 mx-3 my-2 flex-shrink-0" />
 
       {/* Notes list header with sort */}
-      <div className="flex items-center justify-between px-3 mb-1 flex-shrink-0">
+        <div className="flex items-center justify-between px-3 mb-1 flex-shrink-0">
         <span className="text-[10px] font-bold text-surface-600 uppercase tracking-widest">
           {sidebarView === 'trash' ? 'Trash' : activeFolderId ? folders.find(f => f.id === activeFolderId)?.name : 'Notes'}
           {filteredNotes.length > 0 && (
@@ -226,49 +233,60 @@ export function NotesSidebar() {
         </span>
 
         <div className="flex items-center gap-1">
-          {/* Sort dropdown */}
-          <div className="relative">
+          {bulkMode ? (
             <button
-              onClick={() => setShowSort(v => !v)}
-              className={cn('flex items-center gap-0.5 text-[10px] transition-colors',
-                showSort ? 'text-brand-400' : 'text-surface-600 hover:text-white')}
-              title="Sort options"
+              onClick={onSelectAll}
+              className="text-[10px] font-semibold text-surface-500 hover:text-white transition-colors"
             >
-              <SlidersHorizontal size={11} />
-              <ChevronDown size={9} className={cn('transition-transform', showSort && 'rotate-180')} />
+              {selectedIds.size > 0 ? 'None' : 'All'}
             </button>
-            <AnimatePresence>
-              {showSort && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowSort(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="absolute right-0 top-6 bg-surface-800 border border-surface-700 rounded-xl py-1 z-50 shadow-2xl min-w-[140px]"
-                  >
-                    {SORT_OPTIONS.map(opt => (
-                      <button key={opt.id}
-                        onClick={() => { dispatch(setSortBy(opt.id)); setShowSort(false) }}
-                        className={cn('w-full flex items-center justify-between px-3 py-1.5 text-xs transition-colors',
-                          sortBy === opt.id ? 'text-brand-400 bg-brand-600/10' : 'text-surface-400 hover:text-white hover:bg-surface-700/50')}>
-                        {opt.label}
-                        {sortBy === opt.id && <span className="text-brand-400">✓</span>}
-                      </button>
-                    ))}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
+          ) : (
+            <>
+              {/* Sort dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSort(v => !v)}
+                  className={cn('flex items-center gap-0.5 text-[10px] transition-colors',
+                    showSort ? 'text-brand-400' : 'text-surface-600 hover:text-white')}
+                  title="Sort options"
+                >
+                  <SlidersHorizontal size={11} />
+                  <ChevronDown size={9} className={cn('transition-transform', showSort && 'rotate-180')} />
+                </button>
+                <AnimatePresence>
+                  {showSort && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowSort(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="absolute right-0 top-6 bg-surface-800 border border-surface-700 rounded-xl py-1 z-50 shadow-2xl min-w-[140px]"
+                      >
+                        {SORT_OPTIONS.map(opt => (
+                          <button key={opt.id}
+                            onClick={() => { dispatch(setSortBy(opt.id)); setShowSort(false) }}
+                            className={cn('w-full flex items-center justify-between px-3 py-1.5 text-xs transition-colors',
+                              sortBy === opt.id ? 'text-brand-400 bg-brand-600/10' : 'text-surface-400 hover:text-white hover:bg-surface-700/50')}>
+                            {opt.label}
+                            {sortBy === opt.id && <span className="text-brand-400">✓</span>}
+                          </button>
+                        ))}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
 
-          {/* Create new note */}
-          {sidebarView !== 'trash' && (
-            <button onClick={() => handleCreateNote('rich')}
-              className="w-5 h-5 rounded text-surface-600 hover:text-white hover:bg-surface-700 transition-all flex items-center justify-center"
-              title="New note">
-              <Plus size={11} />
-            </button>
+              {/* Create new note */}
+              {sidebarView !== 'trash' && (
+                <button onClick={() => handleCreateNote('rich')}
+                  className="w-5 h-5 rounded text-surface-600 hover:text-white hover:bg-surface-700 transition-all flex items-center justify-center"
+                  title="New note">
+                  <Plus size={11} />
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -302,42 +320,63 @@ export function NotesSidebar() {
             ) : (
               filteredNotes.map(note => {
                 const noteFolder = folders.find(f => f.id === note.folderId)
+                const selected = selectedIds.has(note.id)
+                const isArchived = sidebarView === 'trash'
+                // In bulk mode, clicking selects; otherwise opens the note
+                const handleClick = bulkMode
+                  ? () => onToggleSelect?.(note.id)
+                  : () => dispatch(setActiveNote(note.id))
                 return (
                   <motion.div
                     key={note.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -8 }}
-                    onClick={() => dispatch(setActiveNote(note.id))}
+                    onClick={handleClick}
                     className={cn(
                       'group relative flex items-start gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-all border',
-                      activeNoteId === note.id
-                        ? 'bg-brand-600/10 border-brand-500/20'
-                        : 'border-transparent hover:bg-surface-800/60',
+                      selected
+                        ? 'bg-brand-600/20 border-brand-500/30'
+                        : activeNoteId === note.id && !bulkMode
+                          ? 'bg-brand-600/10 border-brand-500/20'
+                          : 'border-transparent hover:bg-surface-800/60',
                     )}>
                     {/* Left color strip from folder */}
                     {noteFolder && (
                       <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full" style={{ backgroundColor: noteFolder.color }} />
                     )}
 
-                    {/* Icon */}
-                    <span className="text-sm flex-shrink-0 mt-0.5">{note.icon}</span>
+                    {/* Checkbox for bulk mode, icon otherwise */}
+                    {bulkMode ? (
+                      <span className={cn(
+                        'w-4 h-4 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all',
+                        selected
+                          ? 'bg-brand-500 border-brand-500'
+                          : 'border-surface-600 group-hover:border-surface-400',
+                      )}>
+                        {selected && <Check size={8} className="text-white" />}
+                      </span>
+                    ) : (
+                      <span className="text-sm flex-shrink-0 mt-0.5">{note.icon}</span>
+                    )}
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1 mb-0.5">
-                        {note.isPinned && <Pin size={8} className="text-brand-400 flex-shrink-0" />}
-                        {note.isFavorite && <Star size={8} className="text-amber-400 fill-current flex-shrink-0" />}
+                        {note.isPinned && !bulkMode && <Pin size={8} className="text-brand-400 flex-shrink-0" />}
+                        {note.isFavorite && !bulkMode && <Star size={8} className="text-amber-400 fill-current flex-shrink-0" />}
                         <span className={cn(
                           'text-xs font-semibold truncate',
-                          activeNoteId === note.id ? 'text-brand-300' : 'text-slate-200',
+                          activeNoteId === note.id && !bulkMode ? 'text-brand-300' : 'text-surface-200',
                         )}>
                           {note.title}
                         </span>
                         {/* Note type badge */}
-                        <span className={cn('text-[9px] font-bold ml-auto flex-shrink-0 px-1 py-0.5 rounded-sm', METHOD_BADGE[note.noteType ?? 'rich'])}>
-                          {note.noteType === 'code' ? '</>' : 'T'}
-                        </span>
+                        {!bulkMode && (
+                          <span className={cn('text-[9px] font-bold ml-auto flex-shrink-0 px-1 py-0.5 rounded-sm', METHOD_BADGE[note.noteType ?? 'rich'])}>
+                            {note.noteType === 'code' ? '</>' : 'T'}
+                          </span>
+                        )}
                       </div>
 
                       {/* Preview text */}
@@ -362,7 +401,8 @@ export function NotesSidebar() {
                     </div>
 
                     {/* Hover actions */}
-                    <div className="flex-shrink-0 flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className={cn('flex-shrink-0 flex flex-col gap-0.5 transition-opacity',
+                      bulkMode ? 'opacity-0' : 'opacity-0 group-hover:opacity-100')}>
                       {sidebarView === 'trash' ? (
                         <>
                           <button
@@ -404,7 +444,7 @@ export function NotesSidebar() {
       </div>
 
       {/* Footer: create note buttons */}
-      {sidebarView !== 'trash' && (
+      {sidebarView !== 'trash' && !bulkMode && (
         <div className="p-2 flex-shrink-0 border-t border-surface-700/50">
           <div className="flex gap-1">
             <button

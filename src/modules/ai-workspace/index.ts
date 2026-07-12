@@ -1,0 +1,11 @@
+export { AiWorkspaceHome } from './pages/AiWorkspaceHome'
+export { AiChatPage } from './pages/AiChatPage'
+export { WritingStudio } from './pages/WritingStudio'
+export { VoiceStudio } from './pages/VoiceStudio'
+export { DocumentStudio } from './pages/DocumentStudio'
+export { ImageStudio } from './pages/ImageStudio'
+export { CodingStudio } from './pages/CodingStudio'
+export { TranslationStudio } from './pages/TranslationStudio'
+export { ResearchStudio } from './pages/ResearchStudio'
+
+export { aiWorkspaceReducer } from './store/aiWorkspaceSlice'

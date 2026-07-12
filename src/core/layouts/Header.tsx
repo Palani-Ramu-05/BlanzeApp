@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, Search, Bell, ChevronRight, Sun, Moon } from 'lucide-react'
+import { Menu, Search, Bell, ChevronRight, Sun, Moon, Command } from 'lucide-react'
 import { useAppSelector } from '@core/hooks/useStore'
 import { useTheme } from '@core/contexts/ThemeContext'
 import { cn } from '@utils/index'
@@ -22,6 +22,7 @@ const breadcrumbMap: Record<string, string> = {
   help: 'Help',
   vaultdrop: 'VaultDrop',
   devtools: 'DevTools',
+  'api-mock-server': 'API Mock Server',
   timer: 'Timer',
   'task-board': 'Task Board',
   notes: 'Notes',
@@ -31,7 +32,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const { user } = useAppSelector((s) => s.auth)
   const location = useLocation()
   const [searchOpen, setSearchOpen] = useState(false)
-  const { theme, toggleTheme, isDark } = useTheme()
+  const { toggleTheme, isDark } = useTheme()
 
   const segments = location.pathname
     .split('/')
@@ -41,28 +42,28 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   return (
     <header
       className={cn(
-        'h-[60px] flex items-center gap-3 px-4 lg:px-5 flex-shrink-0 transition-colors duration-200',
-        'bg-surface-900/80 backdrop-blur-md border-b border-surface-700/60',
+        'h-14 flex items-center gap-3 px-4 lg:px-5 flex-shrink-0 transition-all duration-200',
+        'bg-surface-900/70 backdrop-blur-lg border-b border-surface-700/40',
       )}
     >
-      {/* Mobile menu button */}
       <button
         onClick={onMenuClick}
-        className="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700 transition-colors"
+        className="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors"
+        aria-label="Open navigation menu"
       >
-        <Menu size={18} />
+        <Menu size={17} />
       </button>
 
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1 flex-1 min-w-0">
+      <nav className="flex items-center gap-1.5 flex-1 min-w-0">
+        <Command size={13} className="text-surface-500 flex-shrink-0" />
         {segments.map((seg, i) => (
-          <span key={seg.key} className="flex items-center gap-1 min-w-0">
-            {i > 0 && <ChevronRight size={12} className="text-surface-600 flex-shrink-0" />}
+          <span key={seg.key} className="flex items-center gap-1.5 min-w-0">
+            {i > 0 && <ChevronRight size={11} className="text-surface-600 flex-shrink-0" />}
             <span
               className={cn(
                 'text-sm truncate',
                 i === segments.length - 1
-                  ? 'font-semibold'
+                  ? 'font-semibold text-surface-100'
                   : 'text-surface-400',
               )}
             >
@@ -70,22 +71,23 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             </span>
           </span>
         ))}
+        {segments.length === 0 && (
+          <span className="text-sm font-semibold text-surface-100">Dashboard</span>
+        )}
       </nav>
 
-      {/* Right actions */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        {/* Search */}
+      <div className="flex items-center gap-1 flex-shrink-0">
         <motion.div
-          animate={{ width: searchOpen ? 220 : 32 }}
+          animate={{ width: searchOpen ? 240 : 32 }}
           transition={{ duration: 0.2 }}
           className="relative flex items-center"
         >
           {searchOpen ? (
             <input
               autoFocus
-              placeholder="Search…"
+              placeholder="Search anything…"
               onBlur={() => setSearchOpen(false)}
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-8 pr-3 py-1.5 text-sm placeholder:text-surface-400 outline-none focus:border-brand-500"
+              className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-8 pr-3 py-1.5 text-sm placeholder:text-surface-400 outline-none focus:border-brand-500 transition-colors text-surface-100"
             />
           ) : null}
           <button
@@ -94,46 +96,43 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
               searchOpen
                 ? 'absolute left-0 text-surface-400 pointer-events-none'
-                : 'text-surface-400 hover:text-white hover:bg-surface-700',
+                : 'text-surface-400 hover:text-surface-100 hover:bg-surface-800',
             )}
+            aria-label="Search"
           >
-            <Search size={16} />
+            <Search size={15} />
           </button>
         </motion.div>
 
-        {/* Notifications */}
-        <button className="relative w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700 transition-colors">
-          <Bell size={16} />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-brand-500 rounded-full" />
+        <button className="relative w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors" aria-label="Notifications">
+          <Bell size={15} />
+          <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-400 rounded-full ring-2 ring-surface-900" />
         </button>
 
-        {/* Theme toggle */}
         <motion.button
           onClick={toggleTheme}
           whileTap={{ scale: 0.9 }}
-          className="relative w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700 transition-colors"
+          className="relative w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors"
           title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
-              key={theme}
+              key={isDark ? 'dark' : 'light'}
               initial={{ opacity: 0, rotate: -45, scale: 0.7 }}
               animate={{ opacity: 1, rotate: 0, scale: 1 }}
               exit={{ opacity: 0, rotate: 45, scale: 0.7 }}
-              transition={{ duration: 0.18 }}
-              className="flex items-center justify-center"
+              transition={{ duration: 0.15 }}
             >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
             </motion.span>
           </AnimatePresence>
         </motion.button>
 
-        {/* Profile */}
-        <button className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-surface-700 transition-colors">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-xs font-bold text-white">
+        <button className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-surface-800 transition-colors ml-1">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-[11px] font-bold text-white">
             {user?.name?.[0]?.toUpperCase() || 'U'}
           </div>
-          <span className="hidden sm:block text-sm font-medium max-w-[80px] truncate text-surface-200">
+          <span className="hidden sm:block text-sm font-medium text-surface-200 max-w-[80px] truncate">
             {user?.name || 'User'}
           </span>
         </button>

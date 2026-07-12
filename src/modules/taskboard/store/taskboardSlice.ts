@@ -115,8 +115,8 @@ export const createColumnAsync = createAsyncThunk('taskboard/createColumn',
     return col
   })
 
-export const updateColumnAsync:any = createAsyncThunk('taskboard/updateColumn',
-  async (payload: { id: string; changes: Partial<Pick<Column, 'name' | 'color' | 'isDone'>> }) => {
+export const updateColumnAsync = createAsyncThunk('taskboard/updateColumn',
+  async (payload: { id: string; changes: Partial<Pick<Column, 'name' | 'color' | 'position' | 'isDone'>> }) => {
     await taskboardService.updateColumn(payload.id, payload.changes)
     return payload
   })

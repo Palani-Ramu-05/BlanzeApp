@@ -18,15 +18,16 @@ interface TabsProps {
 export const Tabs = ({ tabs, activeTab, onChange, variant = 'underline', className }: TabsProps) => {
   if (variant === 'pill') {
     return (
-      <div className={cn('flex gap-1 p-1 bg-surface-800 rounded-xl', className)}>
+      <div className={cn('flex gap-1 p-1 bg-surface-800/60 border border-surface-700/50 rounded-xl', className)}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40',
               activeTab === tab.id
-                ? 'bg-surface-700 text-white shadow-sm'
+                ? 'bg-surface-700 text-surface-100 shadow-sm'
                 : 'text-surface-400 hover:text-surface-200',
             )}
           >
@@ -35,8 +36,8 @@ export const Tabs = ({ tabs, activeTab, onChange, variant = 'underline', classNa
             {tab.badge !== undefined && (
               <span
                 className={cn(
-                  'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
-                  activeTab === tab.id ? 'bg-brand-600 text-white' : 'bg-surface-600 text-surface-300',
+                  'text-[9px] font-bold px-1.5 py-0.5 rounded-full',
+                  activeTab === tab.id ? 'bg-brand-500/20 text-brand-400' : 'bg-surface-700 text-surface-400',
                 )}
               >
                 {tab.badge}
@@ -49,7 +50,7 @@ export const Tabs = ({ tabs, activeTab, onChange, variant = 'underline', classNa
   }
 
   return (
-    <div className={cn('flex border-b border-surface-700 overflow-x-auto no-scrollbar', className)}>
+    <div className={cn('flex border-b border-surface-700/50 overflow-x-auto no-scrollbar', className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -62,7 +63,7 @@ export const Tabs = ({ tabs, activeTab, onChange, variant = 'underline', classNa
           {tab.icon}
           {tab.label}
           {tab.badge !== undefined && (
-            <span className="text-[9px] font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded-full">
+            <span className="text-[9px] font-bold bg-brand-500/20 text-brand-400 px-1.5 py-0.5 rounded-full">
               {tab.badge}
             </span>
           )}

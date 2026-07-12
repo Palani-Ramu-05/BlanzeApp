@@ -8,21 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand palette
         brand: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
         },
-        // Surface palette — driven by CSS variables (supports dark & light themes)
         surface: {
           DEFAULT: 'rgb(var(--surface-DEFAULT) / <alpha-value>)',
           50:  'rgb(var(--surface-50)  / <alpha-value>)',
@@ -79,13 +77,13 @@ export default {
         },
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
-        'glow-sm': '0 0 10px rgba(59, 130, 246, 0.2)',
-        'glass': '0 8px 32px rgba(0, 0, 0, 0.3)',
-        'elevated': '0 20px 60px rgba(0, 0, 0, 0.4)',
-      },
-      backdropBlur: {
-        xs: '2px',
+        'card': 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
+        'elevated': 'var(--shadow-elevated)',
+        'panel': 'var(--shadow-panel)',
+        'dropdown': 'var(--shadow-dropdown)',
+        'glow': 'var(--shadow-glow)',
+        'glow-sm': 'var(--shadow-glow-sm)',
       },
     },
   },

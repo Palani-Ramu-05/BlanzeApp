@@ -18,7 +18,7 @@ const sizeClasses = {
   md: 'max-w-lg',
   lg: 'max-w-2xl',
   xl: 'max-w-4xl',
-  full: 'max-w-full m-4',
+  full: 'max-w-[calc(100vw-32px)] m-4',
 }
 
 export const Modal = ({ open, onClose, title, children, footer, size = 'md', className }: ModalProps) => {
@@ -38,9 +38,7 @@ export const Modal = ({ open, onClose, title, children, footer, size = 'md', cla
     } else {
       document.body.style.overflow = ''
     }
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => { document.body.style.overflow = '' }
   }, [open])
 
   return (
@@ -58,23 +56,24 @@ export const Modal = ({ open, onClose, title, children, footer, size = 'md', cla
           }}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.18 }}
             className={cn(
-              'w-full bg-surface-900 border border-surface-700 rounded-2xl shadow-elevated',
-              'flex flex-col max-h-[90vh]',
+              'w-full bg-surface-900 border border-surface-700/60 rounded-xl surface-elevated',
+              'flex flex-col max-h-[85vh]',
               sizeClasses[size],
               className,
             )}
           >
             {title && (
-              <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700 flex-shrink-0">
-                <h3 className="text-sm font-bold text-white">{title}</h3>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700/50 flex-shrink-0">
+                <h3 className="text-sm font-bold text-[rgb(var(--color-text-primary))]">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="text-surface-400 hover:text-white hover:bg-surface-700 rounded-lg p-1.5 transition-colors"
+                  className="text-surface-400 hover:text-surface-100 hover:bg-surface-800 rounded-lg p-1.5 transition-colors"
+                  aria-label="Close modal"
                 >
                   <X size={16} />
                 </button>
@@ -82,7 +81,7 @@ export const Modal = ({ open, onClose, title, children, footer, size = 'md', cla
             )}
             <div className="flex-1 overflow-y-auto p-5">{children}</div>
             {footer && (
-              <div className="px-5 py-4 border-t border-surface-700 flex items-center justify-end gap-2 flex-shrink-0">
+              <div className="px-5 py-4 border-t border-surface-700/50 flex items-center justify-end gap-2 flex-shrink-0">
                 {footer}
               </div>
             )}

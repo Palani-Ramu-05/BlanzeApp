@@ -1,6 +1,15 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import envConfig from '@core/config/envConfig'
-import { STORAGE_KEYS } from '@core/constants/constants'
+import { supabase } from '@core/config/supabaseClient'
+
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || null
+  } catch {
+    return null
+  }
+}
 
 const axiosInstance = axios.create({
   baseURL: envConfig.API_BASE_URL,
@@ -12,8 +21,8 @@ const axiosInstance = axios.create({
 })
 
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+  async (config: InternalAxiosRequestConfig) => {
+    const token = await getAccessToken()
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -22,13 +31,19 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
+let isRedirecting = false
+
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
-      localStorage.removeItem(STORAGE_KEYS.USER)
-      window.location.href = '/auth/signin'
+  async (error: AxiosError) => {
+    if (error.response?.status === 401 && !isRedirecting) {
+      isRedirecting = true
+      try {
+        const { error: signOutError } = await supabase.auth.signOut()
+        if (signOutError) throw signOutError
+      } finally {
+        window.location.href = '/auth/signin'
+      }
     }
     return Promise.reject(error)
   },

@@ -42,7 +42,7 @@ function ListView({ projectId }: { projectId: string }) {
           <div key={col.id}>
             <div className="flex items-center gap-2 px-4 py-2 mt-2">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: col.color }} />
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wide">{col.name}</span>
+              <span className="text-xs font-bold text-surface-300 uppercase tracking-wide">{col.name}</span>
               <span className="text-[10px] text-surface-600 bg-surface-800 rounded-full px-1.5">{colTasks.length}</span>
             </div>
             {colTasks.map(task => {
@@ -53,7 +53,7 @@ function ListView({ projectId }: { projectId: string }) {
                   className="grid grid-cols-[1fr_120px_100px_100px] gap-2 px-4 py-2.5 text-xs cursor-pointer hover:bg-surface-800/40 rounded-lg transition-colors items-center border-b border-surface-800/40">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={cn('w-2 h-2 rounded-full flex-shrink-0', pc.dot)} />
-                    <span className={cn('truncate text-slate-200', task.isCompleted && 'line-through text-surface-600')}>{task.title}</span>
+                    <span className={cn('truncate text-surface-200', task.isCompleted && 'line-through text-surface-600')}>{task.title}</span>
                     {task.subtasks.length > 0 && (
                       <span className="text-[10px] text-surface-600 flex-shrink-0">
                         {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}
@@ -142,7 +142,7 @@ export default function TaskBoardPage() {
               {activeProject ? (
                 <div className="flex items-center gap-1.5">
                   <span style={{ color: activeProject.color }}>{activeProject.icon}</span>
-                  <span className="font-semibold text-slate-200">{activeProject.name}</span>
+                  <span className="font-semibold text-surface-200">{activeProject.name}</span>
                   <span className="text-[10px] bg-surface-800 text-surface-500 px-1.5 py-0.5 rounded-full">{projectTaskCount} tasks</span>
                 </div>
               ) : (
@@ -177,7 +177,7 @@ export default function TaskBoardPage() {
               <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-surface-600 pointer-events-none" />
               <input value={searchQuery} onChange={e => dispatch(setSearchQuery(e.target.value))}
                 placeholder="Search tasks…"
-                className="pl-6 pr-3 py-1.5 bg-surface-800/60 border border-surface-700/60 rounded-lg text-xs text-slate-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors w-44" />
+                className="pl-6 pr-3 py-1.5 bg-surface-800/60 border border-surface-700/60 rounded-lg text-xs text-surface-200 placeholder:text-surface-600 outline-none focus:border-brand-500/50 transition-colors w-44" />
               {searchQuery && (
                 <button onClick={() => dispatch(setSearchQuery(''))} className="absolute right-2 top-1/2 -translate-y-1/2 text-surface-600 hover:text-white">
                   <X size={10} />
@@ -214,7 +214,7 @@ export default function TaskBoardPage() {
                     <Filter size={10} className="text-surface-600" />
                     <span className="text-[10px] text-surface-600 uppercase tracking-wider">Priority</span>
                     <select value={filterPriority} onChange={e => dispatch(setFilterPriority(e.target.value as typeof filterPriority))}
-                      className="bg-surface-800 border border-surface-700 rounded-lg text-[11px] text-slate-300 px-2 py-1 outline-none cursor-pointer">
+                      className="bg-surface-800 border border-surface-700 rounded-lg text-[11px] text-surface-300 px-2 py-1 outline-none cursor-pointer">
                       <option value="all">All</option>
                       {Object.entries(PRIORITY_CONFIG).map(([k, v]) => (
                         <option key={k} value={k}>{v.label}</option>
@@ -224,7 +224,7 @@ export default function TaskBoardPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-surface-600 uppercase tracking-wider">Label</span>
                     <select value={filterLabel} onChange={e => dispatch(setFilterLabel(e.target.value))}
-                      className="bg-surface-800 border border-surface-700 rounded-lg text-[11px] text-slate-300 px-2 py-1 outline-none cursor-pointer">
+                      className="bg-surface-800 border border-surface-700 rounded-lg text-[11px] text-surface-300 px-2 py-1 outline-none cursor-pointer">
                       <option value="all">All</option>
                       {Object.keys(LABEL_COLORS).map(l => (
                         <option key={l} value={l}>{l}</option>
@@ -249,7 +249,7 @@ export default function TaskBoardPage() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <FolderOpen size={40} className="text-surface-700 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-400 mb-1">No project selected</p>
+              <p className="text-sm font-semibold text-surface-400 mb-1">No project selected</p>
               <p className="text-xs text-surface-600">Select or create a project from the sidebar</p>
             </div>
           </div>

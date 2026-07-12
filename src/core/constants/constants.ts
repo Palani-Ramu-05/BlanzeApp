@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   REFRESH_TOKEN: 'blanze_refresh_token',
   USER: 'blanze_user',
   THEME: 'blanze_theme',
+  AI_SESSION: 'blanze_supabase_session',
 } as const
 
 export const ROUTES = {
@@ -22,6 +23,18 @@ export const ROUTES = {
   TIMER: '/timer',
   TASKBOARD: '/task-board',
   NOTES: '/notes',
+  WEBSCRAPER: '/web-scraper',
+  FILESTUDIO: '/file-studio',
+  AI: '/ai',
+  AI_CHAT: '/ai/chat',
+  AI_WRITING: '/ai/writing',
+  AI_VOICE: '/ai/voice',
+  AI_DOCUMENT: '/ai/document',
+  AI_IMAGE: '/ai/image',
+  AI_CODING: '/ai/coding',
+  AI_TRANSLATION: '/ai/translation',
+  AI_RESEARCH: '/ai/research',
+  API_MOCK_SERVER: '/api-mock-server',
 } as const
 
 export const HTTP_STATUS = {

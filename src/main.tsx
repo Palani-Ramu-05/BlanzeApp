@@ -29,16 +29,16 @@ createRoot(document.getElementById('root')!).render(
               style: {
                 background: 'rgb(var(--surface-800))',
                 color: 'rgb(var(--color-text-primary))',
-                border: '1px solid rgb(var(--surface-600))',
+                border: '1px solid rgb(var(--surface-700))',
                 borderRadius: '10px',
                 fontSize: '13px',
                 padding: '12px 16px',
               },
               success: {
-                iconTheme: { primary: '#3fb950', secondary: 'rgb(var(--surface-800))' },
+                iconTheme: { primary: '#34d399', secondary: 'rgb(var(--surface-800))' },
               },
               error: {
-                iconTheme: { primary: '#f85149', secondary: 'rgb(var(--surface-800))' },
+                iconTheme: { primary: '#f87171', secondary: 'rgb(var(--surface-800))' },
               },
             }}
           />

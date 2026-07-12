@@ -17,7 +17,7 @@ export const FetchLabEnvModal = ({ open, onClose }: Props) => {
     <Modal
       open={open}
       onClose={onClose}
-      title="⚙ Environment Variables"
+      title="âš™ Environment Variables"
       size="lg"
       footer={
         <>
@@ -61,7 +61,7 @@ export const FetchLabEnvModal = ({ open, onClose }: Props) => {
                         dispatch(updateEnvVar({ id: v.id, field: 'key', value: e.target.value }))
                       }
                       placeholder="variable_name"
-                      className={cn('w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-slate-200',
+                      className={cn('w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-surface-200',
                         'focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors')}
                     />
                   </td>
@@ -73,7 +73,7 @@ export const FetchLabEnvModal = ({ open, onClose }: Props) => {
                         dispatch(updateEnvVar({ id: v.id, field: 'value', value: e.target.value }))
                       }
                       placeholder="value"
-                      className={cn('w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-slate-200',
+                      className={cn('w-full bg-transparent border border-transparent rounded px-2 py-1 font-mono text-xs text-surface-200',
                         'focus:bg-surface-800 focus:border-surface-600 outline-none transition-colors')}
                     />
                   </td>

@@ -10,6 +10,7 @@ import { Input, Button } from '@components/index'
 import { usePageTitle } from '@core/hooks/usePageTitle'
 import { ROUTES } from '@core/constants/constants'
 import toast from 'react-hot-toast'
+import AppLogoName from '@/assets/images/app/new-logo.png'
 
 export const ForgotPasswordPage = () => {
   usePageTitle('Forgot Password')
@@ -47,18 +48,18 @@ export const ForgotPasswordPage = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center space-y-4"
       >
-        <div className="w-14 h-14 rounded-2xl bg-green-500/15 border border-green-500/25 flex items-center justify-center mx-auto">
-          <CheckCircle2 size={28} className="text-green-400" />
+        <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mx-auto">
+          <CheckCircle2 size={28} className="text-emerald-400" />
         </div>
         <div>
-          <h2 className="text-xl font-black text-white mb-2">Check your email</h2>
+          <h2 className="text-xl font-black mb-2">Check your email</h2>
           <p className="text-sm text-surface-400">
             We sent a reset link to{' '}
-            <span className="text-white font-semibold">{sentEmail}</span>
+            <span className="font-semibold">{sentEmail}</span>
           </p>
         </div>
         <Link to={ROUTES.AUTH.SIGNIN}>
-          <Button variant="ghost" fullWidth icon={<ArrowLeft size={15} />}>
+          <Button variant="secondary" fullWidth icon={<ArrowLeft size={15} />}>
             Back to Sign In
           </Button>
         </Link>
@@ -68,8 +69,9 @@ export const ForgotPasswordPage = () => {
 
   return (
     <div className="space-y-6">
+      <img src={AppLogoName} alt="App Logo" style={{ height:'30vh', margin:'auto' }} />
       <div>
-        <h1 className="text-2xl font-black text-white mb-1">Reset your password</h1>
+        <h1 className="text-2xl font-black mb-1">Reset your password</h1>
         <p className="text-sm text-surface-400">
           Enter your email address and we'll send you a link to reset your password.
         </p>

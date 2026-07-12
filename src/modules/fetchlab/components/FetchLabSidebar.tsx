@@ -98,7 +98,7 @@ function TreeNode({ item, depth = 0, onCtxMenu, dragState, onDrop }: TreeNodePro
           onContextMenu={(e) => { e.preventDefault(); onCtxMenu(e, item.id, 'folder') }}>
           <span className={cn('text-xs text-surface-500 flex-shrink-0 transition-transform duration-150 w-3 text-center', item.open && 'rotate-90')}>▶</span>
           {item.open ? <FolderOpen size={14} className="text-amber-400 flex-shrink-0" /> : <Folder size={14} className="text-amber-400 flex-shrink-0" />}
-          <span className="text-xs font-semibold text-slate-200 flex-1 truncate">{item.name}</span>
+          <span className="text-xs font-semibold text-surface-200 flex-1 truncate">{item.name}</span>
           {item.children.length > 0 && <span className="text-[9px] text-surface-500 bg-surface-700 px-1.5 rounded-full">{item.children.length}</span>}
           <button onClick={(e) => { e.stopPropagation(); onCtxMenu(e, item.id, 'folder') }}
             className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-surface-500 hover:text-white transition-all flex-shrink-0">
@@ -139,7 +139,7 @@ function TreeNode({ item, depth = 0, onCtxMenu, dragState, onDrop }: TreeNodePro
         <span className={cn('text-[9px] font-black px-1.5 py-0.5 rounded min-w-[36px] text-center flex-shrink-0', methodColors[item.method] || 'text-surface-400 bg-surface-700')}>
           {item.method}
         </span>
-        <span className={cn('text-xs flex-1 truncate', currentId === item.id ? 'text-white' : 'text-slate-300', !item.url && 'text-surface-400')}>
+        <span className={cn('text-xs flex-1 truncate', currentId === item.id ? 'text-white' : 'text-surface-300', !item.url && 'text-surface-400')}>
           {item.name}
         </span>
         {isOpen && <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" title="Open tab" />}
@@ -234,24 +234,26 @@ export const FetchLabSidebar = () => {
 
   return (
     <>
-      <aside className="w-[260px] flex-shrink-0 bg-surface-900 border-r border-surface-700/60 flex flex-col overflow-hidden h-full">
+      <aside className="w-[260px] flex-shrink-0 bg-surface-900/60 border border-surface-700/50 rounded-2xl flex flex-col overflow-hidden h-full backdrop-blur-sm">
         {/* Header */}
         <div className="p-3 flex-shrink-0">
           <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
-                <Zap size={14} className="text-amber-400" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-glow-sm shadow-amber-500/20">
+                <Zap size={14} className="text-white" />
               </div>
-              <span className="text-sm font-black text-white">FetchLab</span>
+              <div>
+                <span className="text-sm font-black text-surface-50 tracking-tight">FetchLab</span>
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={handleExport}
-                className="flex items-center gap-1 text-[10px] text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 border border-surface-700 px-2 py-1 rounded-lg transition-colors"
+                className="flex items-center gap-1 text-[10px] text-surface-400 hover:text-white bg-surface-800/60 hover:bg-surface-700/60 border border-surface-700/50 px-2 py-1 rounded-lg transition-colors"
                 title="Export collections">
                 <Upload size={10} /> Export
               </button>
               <button onClick={() => importInputRef.current?.click()}
-                className="flex items-center gap-1 text-[10px] text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 border border-surface-700 px-2 py-1 rounded-lg transition-colors"
+                className="flex items-center gap-1 text-[10px] text-surface-400 hover:text-white bg-surface-800/60 hover:bg-surface-700/60 border border-surface-700/50 px-2 py-1 rounded-lg transition-colors"
                 title="Import JSON">
                 <Download size={10} /> Import
               </button>
@@ -264,7 +266,7 @@ export const FetchLabSidebar = () => {
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-500 pointer-events-none" />
             <input type="text" value={searchVal} onChange={(e) => setSearchVal(e.target.value)}
               placeholder="Search requests…"
-              className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-7 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-surface-500 outline-none focus:border-brand-500 transition-colors" />
+              className="w-full bg-surface-800/60 border border-surface-700/50 rounded-lg pl-7 pr-3 py-1.5 text-xs text-surface-200 placeholder:text-surface-500 outline-none focus:border-brand-500/60 transition-colors" />
           </div>
 
           {/* Collections toolbar */}
@@ -283,9 +285,16 @@ export const FetchLabSidebar = () => {
                   <TreeNode key={item.id} item={item} onCtxMenu={handleCtxMenu} dragState={dragState} onDrop={handleDrop} />
                 ))
           ) : items.length === 0 ? (
-            <div className="text-center py-8 px-3">
-              <Zap size={24} className="text-surface-600 mx-auto mb-2" />
-              <p className="text-xs text-surface-500 leading-relaxed">Create a folder or request to get started</p>
+            <div className="flex flex-col items-center justify-center py-12 px-3 text-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-3">
+                <Zap size={20} className="text-amber-400" />
+              </div>
+              <p className="text-sm font-medium text-surface-400 mb-1">No requests yet</p>
+              <p className="text-[11px] text-surface-600 mb-3">Create your first request or folder to get started</p>
+              <button onClick={() => setCreateReqOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gradient-to-r from-brand-600 to-brand-500 text-white hover:from-brand-500 hover:to-brand-400 shadow-glow-sm transition-all">
+                <Plus size={12} /> New Request
+              </button>
             </div>
           ) : (
             items.map((item) => (
